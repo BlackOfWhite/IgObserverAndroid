@@ -2,11 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
   package="org.ig.observer.pniewinski">
 
+  <uses-permission android:name="android.permission.INTERNET"></uses-permission>
   <application
     android:allowBackup="true"
     android:icon="@drawable/ic_diamond"
     android:label="@string/app_name"
     android:supportsRtl="true"
+    android:configChanges="orientation|keyboardHidden|screenSize"
     android:theme="@style/AppTheme">
     <activity android:name=".MainActivity">
       <intent-filter>
@@ -15,5 +17,4 @@
       </intent-filter>
     </activity>
   </application>
-
 </manifest>
