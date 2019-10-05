@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
   private ListView listView;
   private IgListAdapter adapter;
   private Context context;
+  private Processor networkProcessor;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     setContentView(R.layout.activity_main);
     this.context = this;
     this.users = loadFromFile();
+    this.networkProcessor = new Processor();
     adapter = new IgListAdapter(this, users);
     listView = (ListView) findViewById(R.id.list_view);
     listView.setAdapter(adapter);
@@ -71,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
         }
       }
     });
+//    clearStorage();
   }
 
   @Override
@@ -116,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
       @Override
       public void run() {
         try {
-          User user = Processor.getUser(userName);
+          User user = networkProcessor.getUser(userName);
           addUserToList(user);
           snackbar(listView, "You are now observing user: " + userName);
         } catch (UserNotFoundException e) {
@@ -173,8 +176,17 @@ public class MainActivity extends AppCompatActivity {
       Log.i(LOG_TAG, "loadedFromFile: " + users);
       return storage;
     } catch (IOException | ClassNotFoundException e) {
-      Log.w(LOG_TAG, "Failed to save list to file: ", e);
+      Log.w(LOG_TAG, "Failed to load list from file: ", e);
+    } catch (Exception e) {
+      Log.w(LOG_TAG, "Failed to load list from file. Unexpected exception: ", e);
     }
     return new ArrayList<>();
+  }
+
+  /**
+   * Only development purposes.
+   */
+  private void clearStorage() {
+    saveToFile(new ArrayList<>());
   }
 }

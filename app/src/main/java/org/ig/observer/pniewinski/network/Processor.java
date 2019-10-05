@@ -12,16 +12,18 @@ import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.ig.observer.pniewinski.R;
-import org.ig.observer.pniewinski.model.User;
 import org.ig.observer.pniewinski.exceptions.PrivateOrNoPostsException;
 import org.ig.observer.pniewinski.exceptions.UserNotFoundException;
+import org.ig.observer.pniewinski.model.User;
 
 public class Processor {
 
-  private static final long ID_NOT_FOUND = -1;
-
+  public static final long NOT_FOUND = -1;
   private static final String USER_FEED_URL = "https://www.instagram.com/%s";
   private static final Pattern USER_ID_PATTERN = Pattern.compile("\"owner\":\\{\"id\":\"(\\d+)\""); // "owner":{"id":"180859558"
+  private static final Pattern FOLLOWS_PATTERN = Pattern.compile("\"edge_follow\":\\{\"count\":(\\d+)\\}"); // "edge_follow":{"count":3626}
+  private static final Pattern FOLLOWED_BY_PATTERN = Pattern
+      .compile("\"edge_followed_by\":\\{\"count\":(\\d+)\\}"); // "edge_followed_by":{"count":3626
   private static final Pattern USER_IMAGE_PATTERN = Pattern.compile("\"src\":\"[^\"]*");
 //  private static final String USER_STORIES_URL =
 //      "https://www.instagram.com/graphql/query/?query_hash=eb1918431e946dd39bf8cf8fb870e426&variables="
@@ -39,18 +41,54 @@ public class Processor {
     return pos;
   }
 
-  private static long parseId(String value) {
+  private static long parseUserId(String value) {
     try {
       int start = ordinalIndexOf(value, "\"", 5);
       return Long.valueOf(value.substring(start + 1, value.length() - 1));
     } catch (Exception e) {
-      return ID_NOT_FOUND;
+      return NOT_FOUND;
     }
   }
 
-  public static User getUser(String userName) throws UserNotFoundException, PrivateOrNoPostsException {
+  private static long getUserId(String text) {
+    Matcher matcher = USER_ID_PATTERN.matcher(text);
+    if (matcher.find()) {
+      return parseUserId(matcher.group());
+    }
+    return NOT_FOUND;
+  }
+
+  private static long getUserFollows(String text) {
+    Matcher matcher = FOLLOWS_PATTERN.matcher(text);
+    if (matcher.find()) {
+      return parseUserFollows(matcher.group());
+    }
+    return NOT_FOUND;
+  }
+
+  private static long getUserFollowedBy(String text) {
+    Matcher matcher = FOLLOWED_BY_PATTERN.matcher(text);
+    if (matcher.find()) {
+      return parseUserFollows(matcher.group());
+    }
+    return NOT_FOUND;
+  }
+
+  private static long parseUserFollows(String value) {
+    try {
+      int start = ordinalIndexOf(value, ":", 2);
+      return Long.valueOf(value.substring(start + 1, value.length() - 1));
+    } catch (Exception e) {
+      return NOT_FOUND;
+    }
+  }
+
+  public synchronized User getUser(String userName) throws UserNotFoundException, PrivateOrNoPostsException {
+    Log.i(LOG_TAG, "getUser: " + userName);
     URLConnection connection;
-    long id = ID_NOT_FOUND;
+    long id = NOT_FOUND;
+    long follows = NOT_FOUND;
+    long followed_by = NOT_FOUND;
     try {
       connection = new URL(String.format(USER_FEED_URL, userName)).openConnection();
     } catch (Exception e) {
@@ -61,24 +99,28 @@ public class Processor {
       while (scanner.hasNext()) {
         String next = scanner.next();
         Log.i(LOG_TAG, "content::: " + next);
-        if (id == ID_NOT_FOUND) {
-          Matcher matcher = USER_ID_PATTERN.matcher(next);
-          if (matcher.find()) {
-            id = parseId(matcher.group());
-          }
+        if (id == NOT_FOUND) {
+          id = getUserId(next);
+        }
+        if (follows == NOT_FOUND) {
+          follows = getUserFollows(next);
+        }
+        if (followed_by == NOT_FOUND) {
+          followed_by = getUserFollowedBy(next);
         }
       }
     } catch (IOException e) {
       throw new UserNotFoundException(userName);
     }
-    if (id == ID_NOT_FOUND) {
+
+    if (id == NOT_FOUND) {
       throw new PrivateOrNoPostsException(userName);
     }
     User user = new User(id, userName, R.drawable.ic_diamond);
-    user.setFollowers((int) id);
+    user.setFollows(follows);
+    user.setFollowed_by(followed_by);
     return user;
   }
-
 //  public void getUserImageUrls(String userName) {
 //    Set<String> urls = getContent(String.format(USER_FEED_URL, userName), USER_IMAGE_PATTERN);
 //    for (String url : urls) {
