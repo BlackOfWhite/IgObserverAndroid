@@ -5,15 +5,23 @@ import java.io.Serializable;
 public class User implements Serializable {
 
   private final long id;
-  private final Integer image;
   private final String name;
-  private final String info;
+  private Integer image;
+  private int posts;
+  private int followers;
+  private String bio;
 
-  public User(long id, String name, String info, Integer image) {
+  public User(long id, String name, Integer image) {
+    this(id, name, image, 0, 0, "");
+  }
+
+  public User(long id, String name, Integer image, int posts, int followers, String bio) {
     this.id = id;
     this.image = image;
     this.name = name;
-    this.info = info;
+    this.posts = posts;
+    this.followers = followers;
+    this.bio = bio;
   }
 
   public long getId() {
@@ -24,21 +32,51 @@ public class User implements Serializable {
     return image;
   }
 
+  public void setImage(Integer image) {
+    this.image = image;
+  }
+
   public String getName() {
     return name;
   }
 
-  public String getInfo() {
-    return info;
+  public int getPosts() {
+    return posts;
+  }
+
+  public void setPosts(int posts) {
+    this.posts = posts;
+  }
+
+  public int getFollowers() {
+    return followers;
+  }
+
+  public void setFollowers(int followers) {
+    this.followers = followers;
+  }
+
+  public String getBio() {
+    return bio;
+  }
+
+  public void setBio(String bio) {
+    this.bio = bio;
   }
 
   @Override
   public String toString() {
     return "User{" +
         "id=" + id +
-        ", image=" + image +
         ", name='" + name + '\'' +
-        ", info='" + info + '\'' +
+        ", image=" + image +
+        ", posts=" + posts +
+        ", followers=" + followers +
+        ", bio='" + bio + '\'' +
         '}';
+  }
+
+  public String getDetails() {
+    return "Posts: " + posts + "   Followers: " + followers;
   }
 }

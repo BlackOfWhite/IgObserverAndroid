@@ -40,7 +40,7 @@ public class IgListAdapter extends ArrayAdapter {
     });
     //this code sets the values of the objects to values from the arrays
     nameTextField.setText(users.get(position).getName());
-    infoTextField.setText(users.get(position).getInfo());
+    infoTextField.setText(users.get(position).getDetails());
     imageView.setImageResource(users.get(position).getImage());
     return rowView;
   }

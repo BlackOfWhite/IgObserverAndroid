@@ -74,8 +74,9 @@ public class Processor {
     if (id == ID_NOT_FOUND) {
       throw new PrivateOrNoPostsException(userName);
     }
-    return new User(id, userName, "User id: " + id, R.drawable.ic_diamond);
-
+    User user = new User(id, userName, R.drawable.ic_diamond);
+    user.setFollowers((int) id);
+    return user;
   }
 
 //  public void getUserImageUrls(String userName) {
