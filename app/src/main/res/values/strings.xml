@@ -7,7 +7,7 @@
   <string name="new_follower">%s has %d new follower(s). Total: %d.</string>
   <string name="lost_follower">%s has just lost %d follower(s). Total: %d.</string>
 
-  <string name="bio_changed">%s has just changed his bio.</string>
+  <string name="bio_changed">%s has just changed his description.</string>
 
   <string name="new_post_comment">%s has just received a new comment from %s.</string>
   <string name="lost_post_comment">%s has just lost a comment from %s.</string>
@@ -15,7 +15,7 @@
   <string name="profile_picture_changed">%s has just changed his profile picture.</string>
 
   <string name="change_to_private">% has just changed his account to private.</string>
-  <string name="change_to_private_i">Unfortunately, from now on you will only able to observe %s\'s number of followers, bio and profile picture.</string>
+  <string name="change_to_private_i">Unfortunately, from now on you will only able to observe %s\'s number of followers, description and profile picture.</string>
   <string name="change_to_public">% has just changed his account to public.</string>
   <string name="change_to_public_i">Great, from now on you will able to access all features of IgObserver.</string>
 

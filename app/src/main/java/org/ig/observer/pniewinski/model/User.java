@@ -10,23 +10,25 @@ public class User implements Serializable {
   private final long id;
   private final String name;
   private Integer image;
-  private int posts;
+  private long posts;
   private long followed_by;
   private long follows;
-  private String bio;
+  private String description;
+  private String biography;
 
   public User(long id, String name, Integer image) {
-    this(id, name, image, 0, 0, 0, "");
+    this(id, name, image, 0, 0, 0, "", "");
   }
 
-  public User(long id, String name, Integer image, int posts, int follows, int followed_by, String bio) {
+  public User(long id, String name, Integer image, long posts, long follows, long followed_by, String description, String biography) {
     this.id = id;
     this.image = image;
     this.name = name;
     this.posts = posts;
     this.follows = follows;
     this.followed_by = followed_by;
-    this.bio = bio;
+    this.description = description;
+    this.biography = biography;
   }
 
   public static String prettyCount(Number number) {
@@ -57,21 +59,21 @@ public class User implements Serializable {
     return name;
   }
 
-  public int getPosts() {
+  public long getPosts() {
     return posts;
   }
 
-  public void setPosts(int posts) {
+  public void setPosts(long posts) {
     this.posts = posts;
   }
 
 
-  public String getBio() {
-    return bio;
+  public String getDescription() {
+    return description;
   }
 
-  public void setBio(String bio) {
-    this.bio = bio;
+  public void setDescription(String description) {
+    this.description = description;
   }
 
   public long getFollowed_by() {
@@ -94,6 +96,14 @@ public class User implements Serializable {
     }
   }
 
+  public String getBiography() {
+    return biography;
+  }
+
+  public void setBiography(String biography) {
+    this.biography = biography;
+  }
+
   @Override
   public String toString() {
     return "User{" +
@@ -103,7 +113,8 @@ public class User implements Serializable {
         ", posts=" + posts +
         ", followed_by=" + followed_by +
         ", follows=" + follows +
-        ", bio='" + bio + '\'' +
+        ", description='" + description + '\'' +
+        ", biography='" + biography + '\'' +
         '}';
   }
 

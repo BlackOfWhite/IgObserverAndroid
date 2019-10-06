@@ -1,6 +1,9 @@
 package org.ig.observer.pniewinski.network;
 
 import static org.ig.observer.pniewinski.MainActivity.LOG_TAG;
+import static org.ig.observer.pniewinski.network.util.ResponseParser.getMatch;
+import static org.ig.observer.pniewinski.network.util.ResponseParser.parseLong;
+import static org.ig.observer.pniewinski.network.util.ResponseParser.parseString;
 
 import android.util.Log;
 import java.io.IOException;
@@ -9,7 +12,6 @@ import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.ig.observer.pniewinski.R;
 import org.ig.observer.pniewinski.exceptions.PrivateOrNoPostsException;
@@ -18,12 +20,16 @@ import org.ig.observer.pniewinski.model.User;
 
 public class Processor {
 
-  public static final long NOT_FOUND = -1;
+  public static final long NOT_FOUND = -12345;
   private static final String USER_FEED_URL = "https://www.instagram.com/%s";
   private static final Pattern USER_ID_PATTERN = Pattern.compile("\"owner\":\\{\"id\":\"(\\d+)\""); // "owner":{"id":"180859558"
   private static final Pattern FOLLOWS_PATTERN = Pattern.compile("\"edge_follow\":\\{\"count\":(\\d+)\\}"); // "edge_follow":{"count":3626}
   private static final Pattern FOLLOWED_BY_PATTERN = Pattern
       .compile("\"edge_followed_by\":\\{\"count\":(\\d+)\\}"); // "edge_followed_by":{"count":3626
+  private static final Pattern USER_DESCRIPTION_PATTERN = Pattern.compile("\"description\":\"[^\"]*"); // "description":"desc"
+  private static final Pattern USER_BIOGRAPHY_PATTERN = Pattern.compile("\"biography\":\"[^\"]*"); // {"biography":"bio"
+  private static final Pattern USER_POSTS_COUNT_PATTERN = Pattern
+      .compile("\"edge_owner_to_timeline_media\":\\{\"count\":(\\d+),"); // "edge_owner_to_timeline_media":{"count":52,
   private static final Pattern USER_IMAGE_PATTERN = Pattern.compile("\"src\":\"[^\"]*");
 //  private static final String USER_STORIES_URL =
 //      "https://www.instagram.com/graphql/query/?query_hash=eb1918431e946dd39bf8cf8fb870e426&variables="
@@ -33,62 +39,15 @@ public class Processor {
 
   private static Map<String, String> LAST_IMG_CACHE = new HashMap<>();
 
-  private static int ordinalIndexOf(String str, String substr, int n) {
-    int pos = str.indexOf(substr);
-    while (--n > 0 && pos != -1) {
-      pos = str.indexOf(substr, pos + 1);
-    }
-    return pos;
-  }
-
-  private static long parseUserId(String value) {
-    try {
-      int start = ordinalIndexOf(value, "\"", 5);
-      return Long.valueOf(value.substring(start + 1, value.length() - 1));
-    } catch (Exception e) {
-      return NOT_FOUND;
-    }
-  }
-
-  private static long getUserId(String text) {
-    Matcher matcher = USER_ID_PATTERN.matcher(text);
-    if (matcher.find()) {
-      return parseUserId(matcher.group());
-    }
-    return NOT_FOUND;
-  }
-
-  private static long getUserFollows(String text) {
-    Matcher matcher = FOLLOWS_PATTERN.matcher(text);
-    if (matcher.find()) {
-      return parseUserFollows(matcher.group());
-    }
-    return NOT_FOUND;
-  }
-
-  private static long getUserFollowedBy(String text) {
-    Matcher matcher = FOLLOWED_BY_PATTERN.matcher(text);
-    if (matcher.find()) {
-      return parseUserFollows(matcher.group());
-    }
-    return NOT_FOUND;
-  }
-
-  private static long parseUserFollows(String value) {
-    try {
-      int start = ordinalIndexOf(value, ":", 2);
-      return Long.valueOf(value.substring(start + 1, value.length() - 1));
-    } catch (Exception e) {
-      return NOT_FOUND;
-    }
-  }
-
   public synchronized User getUser(String userName) throws UserNotFoundException, PrivateOrNoPostsException {
     Log.i(LOG_TAG, "getUser: " + userName);
     URLConnection connection;
     long id = NOT_FOUND;
     long follows = NOT_FOUND;
     long followed_by = NOT_FOUND;
+    String desc = String.valueOf(NOT_FOUND);
+    String biography = String.valueOf(NOT_FOUND);
+    long post_count = NOT_FOUND;
     try {
       connection = new URL(String.format(USER_FEED_URL, userName)).openConnection();
     } catch (Exception e) {
@@ -100,13 +59,22 @@ public class Processor {
         String next = scanner.next();
         Log.i(LOG_TAG, "content::: " + next);
         if (id == NOT_FOUND) {
-          id = getUserId(next);
+          id = parseLong(getMatch(next, USER_ID_PATTERN), "\"", 5);
         }
         if (follows == NOT_FOUND) {
-          follows = getUserFollows(next);
+          follows = parseLong(getMatch(next, FOLLOWS_PATTERN), ":", 2);
         }
         if (followed_by == NOT_FOUND) {
-          followed_by = getUserFollowedBy(next);
+          followed_by = parseLong(getMatch(next, FOLLOWED_BY_PATTERN), ":", 2);
+        }
+        if (desc.equals(NOT_FOUND)) {
+          desc = parseString(getMatch(next, USER_DESCRIPTION_PATTERN), "\"", 3);
+        }
+        if (biography.equals(NOT_FOUND)) {
+          biography = parseString(getMatch(next, USER_BIOGRAPHY_PATTERN), "\"", 3);
+        }
+        if (post_count == NOT_FOUND) {
+          post_count = parseLong(getMatch(next, USER_POSTS_COUNT_PATTERN), ":", 2);
         }
       }
     } catch (IOException e) {
@@ -116,10 +84,7 @@ public class Processor {
     if (id == NOT_FOUND) {
       throw new PrivateOrNoPostsException(userName);
     }
-    User user = new User(id, userName, R.drawable.ic_diamond);
-    user.setFollows(follows);
-    user.setFollowed_by(followed_by);
-    return user;
+    return new User(id, userName, R.drawable.ic_diamond, post_count, follows, followed_by, desc, biography);
   }
 //  public void getUserImageUrls(String userName) {
 //    Set<String> urls = getContent(String.format(USER_FEED_URL, userName), USER_IMAGE_PATTERN);
