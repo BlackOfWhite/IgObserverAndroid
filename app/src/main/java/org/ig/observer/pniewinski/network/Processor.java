@@ -9,24 +9,24 @@ import android.util.Log;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 import org.ig.observer.pniewinski.R;
+import org.ig.observer.pniewinski.exceptions.NetworkNotFound;
 import org.ig.observer.pniewinski.exceptions.PrivateOrNoPostsException;
 import org.ig.observer.pniewinski.exceptions.UserNotFoundException;
 import org.ig.observer.pniewinski.model.User;
 
 public class Processor {
 
-  public static final long NOT_FOUND = -12345;
   private static final String USER_FEED_URL = "https://www.instagram.com/%s";
   private static final Pattern USER_ID_PATTERN = Pattern.compile("\"owner\":\\{\"id\":\"(\\d+)\""); // "owner":{"id":"180859558"
   private static final Pattern FOLLOWS_PATTERN = Pattern.compile("\"edge_follow\":\\{\"count\":(\\d+)\\}"); // "edge_follow":{"count":3626}
   private static final Pattern FOLLOWED_BY_PATTERN = Pattern
       .compile("\"edge_followed_by\":\\{\"count\":(\\d+)\\}"); // "edge_followed_by":{"count":3626
-  private static final Pattern USER_DESCRIPTION_PATTERN = Pattern.compile("\"description\":\"[^\"]*"); // "description":"desc"
   private static final Pattern USER_BIOGRAPHY_PATTERN = Pattern.compile("\"biography\":\"[^\"]*"); // {"biography":"bio"
   private static final Pattern USER_POSTS_COUNT_PATTERN = Pattern
       .compile("\"edge_owner_to_timeline_media\":\\{\"count\":(\\d+),"); // "edge_owner_to_timeline_media":{"count":52,
@@ -39,52 +39,56 @@ public class Processor {
 
   private static Map<String, String> LAST_IMG_CACHE = new HashMap<>();
 
-  public synchronized User getUser(String userName) throws UserNotFoundException, PrivateOrNoPostsException {
+  public synchronized User getUser(String userName) throws UserNotFoundException, PrivateOrNoPostsException, NetworkNotFound {
     Log.i(LOG_TAG, "getUser: " + userName);
     URLConnection connection;
-    long id = NOT_FOUND;
-    long follows = NOT_FOUND;
-    long followed_by = NOT_FOUND;
-    String desc = String.valueOf(NOT_FOUND);
-    String biography = String.valueOf(NOT_FOUND);
-    long post_count = NOT_FOUND;
+    Long id = null;
+    Long follows = null;
+    Long followed_by = null;
+    String biography = null;
+    Long post_count = null;
     try {
       connection = new URL(String.format(USER_FEED_URL, userName)).openConnection();
+    } catch (UnknownHostException e) {
+      Log.w(LOG_TAG, "getUser: " + userName, e);
+      throw new NetworkNotFound();
     } catch (Exception e) {
+      Log.w(LOG_TAG, "getUser: " + userName, e);
       throw new UserNotFoundException(userName);
     }
     try (Scanner scanner = new Scanner(connection.getInputStream())) {
       scanner.useDelimiter("\\Z");
       while (scanner.hasNext()) {
         String next = scanner.next();
-        Log.i(LOG_TAG, "content::: " + next);
-        if (id == NOT_FOUND) {
+        if (id == null) {
           id = parseLong(getMatch(next, USER_ID_PATTERN), "\"", 5);
         }
-        if (follows == NOT_FOUND) {
+        if (follows == null) {
           follows = parseLong(getMatch(next, FOLLOWS_PATTERN), ":", 2);
         }
-        if (followed_by == NOT_FOUND) {
+        if (followed_by == null) {
           followed_by = parseLong(getMatch(next, FOLLOWED_BY_PATTERN), ":", 2);
         }
-        if (desc.equals(NOT_FOUND)) {
-          desc = parseString(getMatch(next, USER_DESCRIPTION_PATTERN), "\"", 3);
+        if (biography == null) {
+          biography = parseString(getMatch(next, USER_BIOGRAPHY_PATTERN), "\"", 3, 0);
         }
-        if (biography.equals(NOT_FOUND)) {
-          biography = parseString(getMatch(next, USER_BIOGRAPHY_PATTERN), "\"", 3);
-        }
-        if (post_count == NOT_FOUND) {
+        if (post_count == null) {
           post_count = parseLong(getMatch(next, USER_POSTS_COUNT_PATTERN), ":", 2);
         }
+        if (id != null && follows != null && followed_by != null && biography != null && post_count != null) {
+          break;
+        }
       }
+    } catch (UnknownHostException e) {
+      throw new NetworkNotFound();
     } catch (IOException e) {
       throw new UserNotFoundException(userName);
     }
 
-    if (id == NOT_FOUND) {
+    if (id == null) {
       throw new PrivateOrNoPostsException(userName);
     }
-    return new User(id, userName, R.drawable.ic_diamond, post_count, follows, followed_by, desc, biography);
+    return new User(id, userName, R.drawable.ic_diamond, post_count, follows, followed_by, biography);
   }
 //  public void getUserImageUrls(String userName) {
 //    Set<String> urls = getContent(String.format(USER_FEED_URL, userName), USER_IMAGE_PATTERN);

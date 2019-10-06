@@ -1,7 +1,13 @@
 package org.ig.observer.pniewinski;
 
+import static org.ig.observer.pniewinski.MainActivity.LOG_TAG;
+
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.StyleSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -11,10 +17,12 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import java.util.List;
+import org.apache.commons.text.StringEscapeUtils;
 import org.ig.observer.pniewinski.model.User;
 
 public class IgListAdapter extends ArrayAdapter {
 
+  private static final StyleSpan BOLD_STYLE = new StyleSpan(android.graphics.Typeface.BOLD);
   private final MainActivity mainActivity;
   private List<User> users;
 
@@ -38,10 +46,18 @@ public class IgListAdapter extends ArrayAdapter {
         }
       }
     });
+    TextView biographyTextView = (TextView) rowView.findViewById(R.id.biography_text_view);
+
     //this code sets the values of the objects to values from the arrays
-    nameTextField.setText(users.get(position).getName());
-    infoTextField.setText(users.get(position).getDetails());
-    imageView.setImageResource(users.get(position).getImage());
+    final User user = users.get(position);
+    nameTextField.setText(user.getName());
+    infoTextField.setText(user.getInfo());
+    imageView.setImageResource(user.getImage());
+    // Bold and formatted text
+    String formattedText = getFormattedText(user.getBiography());
+    final SpannableStringBuilder sb = new SpannableStringBuilder("Biography: " + formattedText);
+    sb.setSpan(BOLD_STYLE, 0, "Biography:" .length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+    biographyTextView.setText(sb);
     return rowView;
   }
 
@@ -53,5 +69,14 @@ public class IgListAdapter extends ArrayAdapter {
         notifyDataSetChanged();
       }
     });
+  }
+
+  private String getFormattedText(final String text) {
+    try {
+      return StringEscapeUtils.unescapeJava(text);
+    } catch (Exception e) {
+      Log.w(LOG_TAG, "getFormattedText: Failed to beautify text.", e);
+      return text;
+    }
   }
 }

@@ -1,6 +1,5 @@
 package org.ig.observer.pniewinski.network.util;
 
-import static org.ig.observer.pniewinski.network.Processor.NOT_FOUND;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,8 +18,11 @@ public class ResponseParser {
    * @param c pattern to find in string to start substr from
    * @param n index of nth occurrence of c char
    */
-  public static long parseLong(String value, String c, int n) {
-    return Long.valueOf(parseString(value, c, n));
+  public static Long parseLong(String value, String c, int n) {
+    if (value != null) {
+      return Long.valueOf(parseString(value, c, n));
+    }
+    return null;
   }
 
   public static String getMatch(String text, Pattern pattern) {
@@ -28,16 +30,22 @@ public class ResponseParser {
     if (matcher.find()) {
       return matcher.group();
     }
-    return String.valueOf(NOT_FOUND);
+    return null;
   }
 
   public static String parseString(String value, String c, int n) {
-    try {
-      int start = ordinalIndexOf(value, c, n);
-      return value.substring(start + 1, value.length() - 1);
-    } catch (Exception e) {
-      return String.valueOf(NOT_FOUND);
-    }
+    return parseString(value, c, n, 1);
   }
 
+  public static String parseString(String value, String c, int n, int b) {
+    if (value != null) {
+      try {
+        int start = ordinalIndexOf(value, c, n);
+        return value.substring(start + 1, value.length() - b);
+      } catch (Exception e) {
+        return null;
+      }
+    }
+    return null;
+  }
 }

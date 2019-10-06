@@ -1,39 +1,35 @@
 package org.ig.observer.pniewinski.model;
 
-import static org.ig.observer.pniewinski.network.Processor.NOT_FOUND;
-
 import java.io.Serializable;
 import java.text.DecimalFormat;
 
 public class User implements Serializable {
 
-  private final long id;
+  private final Long id;
   private final String name;
   private Integer image;
-  private long posts;
-  private long followed_by;
-  private long follows;
-  private String description;
+  private Long posts;
+  private Long followed_by;
+  private Long follows;
   private String biography;
 
-  public User(long id, String name, Integer image) {
-    this(id, name, image, 0, 0, 0, "", "");
+  public User(Long id, String name, Integer image) {
+    this(id, name, image, 0l, 0l, 0l, "");
   }
 
-  public User(long id, String name, Integer image, long posts, long follows, long followed_by, String description, String biography) {
+  public User(Long id, String name, Integer image, Long posts, Long follows, Long followed_by, String biography) {
     this.id = id;
     this.image = image;
     this.name = name;
     this.posts = posts;
     this.follows = follows;
     this.followed_by = followed_by;
-    this.description = description;
     this.biography = biography;
   }
 
   public static String prettyCount(Number number) {
     char[] suffix = {' ', 'k', 'M'};
-    long numValue = number.longValue();
+    Long numValue = number.longValue();
     int value = (int) Math.floor(Math.log10(numValue));
     int base = value / 3;
     if (value >= 3 && base < suffix.length) {
@@ -43,7 +39,15 @@ public class User implements Serializable {
     }
   }
 
-  public long getId() {
+  private static String validValue(String s) {
+    return s == null ? "" : s;
+  }
+
+  private static Long validValue(Long l) {
+    return l == null ? 0 : l;
+  }
+
+  public Long getId() {
     return id;
   }
 
@@ -56,48 +60,35 @@ public class User implements Serializable {
   }
 
   public String getName() {
-    return name;
+    return validValue(name);
   }
 
-  public long getPosts() {
-    return posts;
+  public Long getPosts() {
+    return validValue(posts);
   }
 
-  public void setPosts(long posts) {
+  public void setPosts(Long posts) {
     this.posts = posts;
   }
 
-
-  public String getDescription() {
-    return description;
-  }
-
-  public void setDescription(String description) {
-    this.description = description;
-  }
-
-  public long getFollowed_by() {
+  public Long getFollowed_by() {
     return followed_by;
   }
 
-  public void setFollowed_by(long followed_by) {
-    if (followed_by != NOT_FOUND) {
-      this.followed_by = followed_by;
-    }
+  public void setFollowed_by(Long followed_by) {
+    this.followed_by = followed_by;
   }
 
-  public long getFollows() {
-    return follows;
+  public Long getFollows() {
+    return validValue(follows);
   }
 
-  public void setFollows(long follows) {
-    if (follows != NOT_FOUND) {
-      this.follows = follows;
-    }
+  public void setFollows(Long follows) {
+    this.follows = follows;
   }
 
   public String getBiography() {
-    return biography;
+    return validValue(biography);
   }
 
   public void setBiography(String biography) {
@@ -113,12 +104,11 @@ public class User implements Serializable {
         ", posts=" + posts +
         ", followed_by=" + followed_by +
         ", follows=" + follows +
-        ", description='" + description + '\'' +
         ", biography='" + biography + '\'' +
         '}';
   }
 
-  public String getDetails() {
-    return "Posts: " + posts + "   Follows: " + prettyCount(follows) + "   Observed by: " + prettyCount(followed_by);
+  public String getInfo() {
+    return "Posts: " + getPosts() + "\nFollows: " + prettyCount(getFollows()) + "   Followed by: " + prettyCount(getFollowed_by());
   }
 }

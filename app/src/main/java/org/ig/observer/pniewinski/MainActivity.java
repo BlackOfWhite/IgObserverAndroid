@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.ig.observer.pniewinski.exceptions.NetworkNotFound;
 import org.ig.observer.pniewinski.exceptions.PrivateOrNoPostsException;
 import org.ig.observer.pniewinski.exceptions.UserNotFoundException;
 import org.ig.observer.pniewinski.model.User;
@@ -56,10 +57,13 @@ public class MainActivity extends AppCompatActivity {
       @Override
       public void onItemClick(AdapterView<?> parent, View view, int position,
           long id) {
-//        Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-//        String message = nameArray[position];
-//        intent.putExtra("animal", message);
-//        startActivity(intent);
+        Log.i(LOG_TAG, "onItemClick: " + position);
+        View bottomView = view.findViewById((R.id.layout_bottom));
+        if (bottomView.getVisibility() == View.GONE) {
+          bottomView.setVisibility(View.VISIBLE);
+        } else {
+          bottomView.setVisibility(View.GONE);
+        }
       }
     });
     final FloatingActionButton fabButton = (FloatingActionButton) findViewById(R.id.fab_add_new);
@@ -127,6 +131,8 @@ public class MainActivity extends AppCompatActivity {
         } catch (PrivateOrNoPostsException e) {
           snackbar(listView,
               "User " + userName + " was found. However, only profiles that are public and have at least one post can be observed.");
+        } catch (NetworkNotFound networkNotFound) {
+          snackbar(listView, "No internet connection");
         }
       }
     });
@@ -147,6 +153,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   public void addUserToList(User user) {
+    Log.i(LOG_TAG, "addUserToList: " + user);
     users.add(user);
     adapter.refreshItems(users);
     saveToFile(users);
