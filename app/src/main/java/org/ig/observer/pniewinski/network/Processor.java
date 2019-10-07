@@ -11,8 +11,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 import org.ig.observer.pniewinski.exceptions.NetworkNotFound;
@@ -37,8 +35,6 @@ public class Processor {
 //          + "{\"reel_ids\": [%s],\"precomposed_overlay\": \"False\",\"show_story_viewer_list\": \"True\",\"story_viewer_fetch_count\": 50,\"story_viewer_cursor\": \"\"}";
 //  private static final Pattern USER_STORY_PATTERN = Pattern.compile(
 //      "\\{\"src\":\""); // {"src":"https://scontent-frt3-1.cdninstagram.com/vp/e3cb5179952d94b173303b5fedfe717f/5D9827B5/t51.12442-15/sh0.08/e35/p640x640/71270402_596572067543731_4247509925026537721_n.jpg?_nc_ht=scontent-frt3-1.cdninstagram.com&_nc_cat=107"
-
-  private static Map<String, String> LAST_IMG_CACHE = new HashMap<>();
 
   public synchronized User getUser(String userName) throws UserNotFoundException, NetworkNotFound {
     Log.i(LOG_TAG, "getUser: " + userName);

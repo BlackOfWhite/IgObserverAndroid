@@ -1,8 +1,11 @@
 package org.ig.observer.pniewinski;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -28,10 +31,12 @@ import org.ig.observer.pniewinski.exceptions.NetworkNotFound;
 import org.ig.observer.pniewinski.exceptions.UserNotFoundException;
 import org.ig.observer.pniewinski.model.User;
 import org.ig.observer.pniewinski.network.Processor;
+import org.ig.observer.pniewinski.service.AlarmReceiver;
 
 public class MainActivity extends AppCompatActivity {
 
   public static final String LOG_TAG = "IG_TAG";
+  private static final Long SERVICE_PERIOD = 300000L; // 5min
   private static final String FILE_NAME = "ig_observer_storage";
   private static final int MAX_OBSERVED = 10;
   private static List<User> users = new ArrayList<>();
@@ -77,6 +82,23 @@ public class MainActivity extends AppCompatActivity {
       }
     });
 //    clearStorage();
+    scheduleAlarm();
+  }
+
+  // Setup a recurring alarm every half hour
+  private void scheduleAlarm() {
+    // Construct an intent that will execute the AlarmReceiver
+    Intent intent = new Intent(getApplicationContext(), AlarmReceiver.class);
+    // Create a PendingIntent to be triggered when the alarm goes off
+    final PendingIntent pIntent = PendingIntent.getBroadcast(this, AlarmReceiver.REQUEST_CODE,
+        intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    // Setup periodic alarm every every half hour from this point onwards
+    long firstMillis = System.currentTimeMillis(); // alarm is set right away
+    AlarmManager alarm = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+    // First parameter is the type: ELAPSED_REALTIME, ELAPSED_REALTIME_WAKEUP, RTC_WAKEUP
+    // Interval can be INTERVAL_FIFTEEN_MINUTES, INTERVAL_HALF_HOUR, INTERVAL_HOUR, INTERVAL_DAY
+    alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, firstMillis,
+        SERVICE_PERIOD, pIntent); // every 5 min
   }
 
   @Override
