@@ -14,13 +14,28 @@ public class ResponseParser {
     return pos;
   }
 
+  public static Long parseLong(String value, String c, int n) {
+    return parseLong(value, c, n, 1);
+  }
+
   /**
    * @param c pattern to find in string to start substr from
    * @param n index of nth occurrence of c char
    */
-  public static Long parseLong(String value, String c, int n) {
+  public static Long parseLong(String value, String c, int n, int b) {
     if (value != null) {
-      return Long.valueOf(parseString(value, c, n));
+      return Long.valueOf(parseString(value, c, n, b));
+    }
+    return null;
+  }
+
+  /**
+   * @param c pattern to find in string to start substr from
+   * @param n index of nth occurrence of c char
+   */
+  public static Boolean parseBoolean(String value, String c, int n) {
+    if (value != null) {
+      return Boolean.valueOf(parseString(value, c, n));
     }
     return null;
   }

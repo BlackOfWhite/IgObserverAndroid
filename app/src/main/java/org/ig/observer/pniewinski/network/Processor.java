@@ -2,6 +2,7 @@ package org.ig.observer.pniewinski.network;
 
 import static org.ig.observer.pniewinski.MainActivity.LOG_TAG;
 import static org.ig.observer.pniewinski.network.util.ResponseParser.getMatch;
+import static org.ig.observer.pniewinski.network.util.ResponseParser.parseBoolean;
 import static org.ig.observer.pniewinski.network.util.ResponseParser.parseLong;
 import static org.ig.observer.pniewinski.network.util.ResponseParser.parseString;
 
@@ -23,14 +24,15 @@ import org.ig.observer.pniewinski.model.User;
 public class Processor {
 
   private static final String USER_FEED_URL = "https://www.instagram.com/%s";
-  private static final Pattern USER_ID_PATTERN = Pattern.compile("\"owner\":\\{\"id\":\"(\\d+)\""); // "owner":{"id":"180859558"
+  private static final Pattern USER_ID_PATTERN = Pattern.compile("\"id\":\"(\\d+)\",\"is_buss"); // "id":"(\d+)","is_buss
   private static final Pattern FOLLOWS_PATTERN = Pattern.compile("\"edge_follow\":\\{\"count\":(\\d+)\\}"); // "edge_follow":{"count":3626}
   private static final Pattern FOLLOWED_BY_PATTERN = Pattern
       .compile("\"edge_followed_by\":\\{\"count\":(\\d+)\\}"); // "edge_followed_by":{"count":3626
   private static final Pattern USER_BIOGRAPHY_PATTERN = Pattern.compile("\"biography\":\"[^\"]*"); // {"biography":"bio"
   private static final Pattern USER_POSTS_COUNT_PATTERN = Pattern
       .compile("\"edge_owner_to_timeline_media\":\\{\"count\":(\\d+),"); // "edge_owner_to_timeline_media":{"count":52,
-  private static final Pattern USER_IMAGE_PATTERN = Pattern.compile("\"src\":\"[^\"]*");
+  private static final Pattern IS_PRIVATE_PATTERN = Pattern.compile("\"is_private\":(true|false),"); // "is_private":true,
+  private static final Pattern PROFILE_IMG_URL_PATTERN = Pattern.compile("\"src\":\"[^\"]*");
 //  private static final String USER_STORIES_URL =
 //      "https://www.instagram.com/graphql/query/?query_hash=eb1918431e946dd39bf8cf8fb870e426&variables="
 //          + "{\"reel_ids\": [%s],\"precomposed_overlay\": \"False\",\"show_story_viewer_list\": \"True\",\"story_viewer_fetch_count\": 50,\"story_viewer_cursor\": \"\"}";
@@ -47,6 +49,7 @@ public class Processor {
     Long followed_by = null;
     String biography = null;
     Long post_count = null;
+    Boolean is_private = null;
     try {
       connection = new URL(String.format(USER_FEED_URL, userName)).openConnection();
     } catch (UnknownHostException e) {
@@ -61,7 +64,7 @@ public class Processor {
       while (scanner.hasNext()) {
         String next = scanner.next();
         if (id == null) {
-          id = parseLong(getMatch(next, USER_ID_PATTERN), "\"", 5);
+          id = parseLong(getMatch(next, USER_ID_PATTERN), "\"", 3, 10);
         }
         if (follows == null) {
           follows = parseLong(getMatch(next, FOLLOWS_PATTERN), ":", 2);
@@ -75,7 +78,10 @@ public class Processor {
         if (post_count == null) {
           post_count = parseLong(getMatch(next, USER_POSTS_COUNT_PATTERN), ":", 2);
         }
-        if (id != null && follows != null && followed_by != null && biography != null && post_count != null) {
+        if (is_private == null) {
+          is_private = parseBoolean(getMatch(next, IS_PRIVATE_PATTERN), ":", 1);
+        }
+        if (id != null && follows != null && followed_by != null && biography != null && post_count != null && is_private != null) {
           break;
         }
       }
@@ -84,14 +90,10 @@ public class Processor {
     } catch (IOException e) {
       throw new UserNotFoundException(userName);
     }
-
-    if (id == null) {
-      throw new PrivateOrNoPostsException(userName);
-    }
-    return new User(id, userName, R.drawable.ic_diamond, post_count, follows, followed_by, biography);
+    return new User(id, userName, R.drawable.ic_diamond, post_count, follows, followed_by, biography, is_private);
   }
 //  public void getUserImageUrls(String userName) {
-//    Set<String> urls = getContent(String.format(USER_FEED_URL, userName), USER_IMAGE_PATTERN);
+//    Set<String> urls = getContent(String.format(USER_FEED_URL, userName), PROFILE_IMG_URL_PATTERN);
 //    for (String url : urls) {
 //      int start = ordinalIndexOf(url, "\"", 3);
 //      try {

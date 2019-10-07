@@ -129,8 +129,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (UserNotFoundException e) {
           snackbar(listView, "User " + userName + " was not found");
         } catch (PrivateOrNoPostsException e) {
-          snackbar(listView,
-              "User " + userName + " was found. However, only profiles that are public and have at least one post can be observed.");
+          snackbar(listView, "User " + userName + " was not found.");
         } catch (NetworkNotFound networkNotFound) {
           snackbar(listView, "No internet connection");
         }

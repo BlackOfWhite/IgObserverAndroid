@@ -12,12 +12,13 @@ public class User implements Serializable {
   private Long followed_by;
   private Long follows;
   private String biography;
+  private Boolean is_private;
 
   public User(Long id, String name, Integer image) {
-    this(id, name, image, 0l, 0l, 0l, "");
+    this(id, name, image, 0l, 0l, 0l, "", false);
   }
 
-  public User(Long id, String name, Integer image, Long posts, Long follows, Long followed_by, String biography) {
+  public User(Long id, String name, Integer image, Long posts, Long follows, Long followed_by, String biography, Boolean is_private) {
     this.id = id;
     this.image = image;
     this.name = name;
@@ -25,6 +26,7 @@ public class User implements Serializable {
     this.follows = follows;
     this.followed_by = followed_by;
     this.biography = biography;
+    this.is_private = is_private;
   }
 
   public static String prettyCount(Number number) {
@@ -95,6 +97,14 @@ public class User implements Serializable {
     this.biography = biography;
   }
 
+  public Boolean getIs_private() {
+    return is_private;
+  }
+
+  public void setIs_private(Boolean is_private) {
+    this.is_private = is_private;
+  }
+
   @Override
   public String toString() {
     return "User{" +
@@ -105,10 +115,12 @@ public class User implements Serializable {
         ", followed_by=" + followed_by +
         ", follows=" + follows +
         ", biography='" + biography + '\'' +
+        ", is_private=" + is_private +
         '}';
   }
 
   public String getInfo() {
-    return "Posts: " + getPosts() + "\nFollows: " + prettyCount(getFollows()) + "   Followed by: " + prettyCount(getFollowed_by());
+    return is_private ? "This account is private"
+        : "Posts: " + getPosts() + "\nFollows: " + prettyCount(getFollows()) + "   Followed by: " + prettyCount(getFollowed_by());
   }
 }
