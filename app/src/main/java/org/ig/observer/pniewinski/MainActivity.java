@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.ig.observer.pniewinski.exceptions.NetworkNotFound;
-import org.ig.observer.pniewinski.exceptions.PrivateOrNoPostsException;
 import org.ig.observer.pniewinski.exceptions.UserNotFoundException;
 import org.ig.observer.pniewinski.model.User;
 import org.ig.observer.pniewinski.network.Processor;
@@ -128,8 +127,6 @@ public class MainActivity extends AppCompatActivity {
           snackbar(listView, "You are now observing user: " + userName);
         } catch (UserNotFoundException e) {
           snackbar(listView, "User " + userName + " was not found");
-        } catch (PrivateOrNoPostsException e) {
-          snackbar(listView, "User " + userName + " was not found.");
         } catch (NetworkNotFound networkNotFound) {
           snackbar(listView, "No internet connection");
         }

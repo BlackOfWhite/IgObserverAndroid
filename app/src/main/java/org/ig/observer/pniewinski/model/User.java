@@ -7,20 +7,20 @@ public class User implements Serializable {
 
   private final Long id;
   private final String name;
-  private Integer image;
+  private String img_url;
   private Long posts;
   private Long followed_by;
   private Long follows;
   private String biography;
   private Boolean is_private;
 
-  public User(Long id, String name, Integer image) {
-    this(id, name, image, 0l, 0l, 0l, "", false);
+  public User(Long id, String name, String img_url) {
+    this(id, name, img_url, 0l, 0l, 0l, "", false);
   }
 
-  public User(Long id, String name, Integer image, Long posts, Long follows, Long followed_by, String biography, Boolean is_private) {
+  public User(Long id, String name, String img_url, Long posts, Long follows, Long followed_by, String biography, Boolean is_private) {
     this.id = id;
-    this.image = image;
+    this.img_url = img_url;
     this.name = name;
     this.posts = posts;
     this.follows = follows;
@@ -53,12 +53,12 @@ public class User implements Serializable {
     return id;
   }
 
-  public Integer getImage() {
-    return image;
+  public String getImg_url() {
+    return img_url;
   }
 
-  public void setImage(Integer image) {
-    this.image = image;
+  public void setImg_url(String img_url) {
+    this.img_url = img_url;
   }
 
   public String getName() {
@@ -110,7 +110,7 @@ public class User implements Serializable {
     return "User{" +
         "id=" + id +
         ", name='" + name + '\'' +
-        ", image=" + image +
+        ", img_url=" + img_url + +'\'' +
         ", posts=" + posts +
         ", followed_by=" + followed_by +
         ", follows=" + follows +

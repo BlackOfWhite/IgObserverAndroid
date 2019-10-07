@@ -15,16 +15,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Pattern;
-import org.ig.observer.pniewinski.R;
 import org.ig.observer.pniewinski.exceptions.NetworkNotFound;
-import org.ig.observer.pniewinski.exceptions.PrivateOrNoPostsException;
 import org.ig.observer.pniewinski.exceptions.UserNotFoundException;
 import org.ig.observer.pniewinski.model.User;
 
 public class Processor {
 
   private static final String USER_FEED_URL = "https://www.instagram.com/%s";
-  private static final Pattern USER_ID_PATTERN = Pattern.compile("\"id\":\"(\\d+)\",\"is_buss"); // "id":"(\d+)","is_buss
+  private static final Pattern USER_ID_PATTERN = Pattern.compile("\"id\":\"(\\d+)\",\\\"is_busi"); // "id":"(\d+)","is_buss
   private static final Pattern FOLLOWS_PATTERN = Pattern.compile("\"edge_follow\":\\{\"count\":(\\d+)\\}"); // "edge_follow":{"count":3626}
   private static final Pattern FOLLOWED_BY_PATTERN = Pattern
       .compile("\"edge_followed_by\":\\{\"count\":(\\d+)\\}"); // "edge_followed_by":{"count":3626
@@ -32,7 +30,8 @@ public class Processor {
   private static final Pattern USER_POSTS_COUNT_PATTERN = Pattern
       .compile("\"edge_owner_to_timeline_media\":\\{\"count\":(\\d+),"); // "edge_owner_to_timeline_media":{"count":52,
   private static final Pattern IS_PRIVATE_PATTERN = Pattern.compile("\"is_private\":(true|false),"); // "is_private":true,
-  private static final Pattern PROFILE_IMG_URL_PATTERN = Pattern.compile("\"src\":\"[^\"]*");
+  private static final Pattern PROFILE_IMG_URL_PATTERN = Pattern
+      .compile("<meta property=\"og:image\" content=\"[^\"]*"); // <meta property="og:image" content="url"
 //  private static final String USER_STORIES_URL =
 //      "https://www.instagram.com/graphql/query/?query_hash=eb1918431e946dd39bf8cf8fb870e426&variables="
 //          + "{\"reel_ids\": [%s],\"precomposed_overlay\": \"False\",\"show_story_viewer_list\": \"True\",\"story_viewer_fetch_count\": 50,\"story_viewer_cursor\": \"\"}";
@@ -41,7 +40,7 @@ public class Processor {
 
   private static Map<String, String> LAST_IMG_CACHE = new HashMap<>();
 
-  public synchronized User getUser(String userName) throws UserNotFoundException, PrivateOrNoPostsException, NetworkNotFound {
+  public synchronized User getUser(String userName) throws UserNotFoundException, NetworkNotFound {
     Log.i(LOG_TAG, "getUser: " + userName);
     URLConnection connection;
     Long id = null;
@@ -50,6 +49,7 @@ public class Processor {
     String biography = null;
     Long post_count = null;
     Boolean is_private = null;
+    String img_url = null;
     try {
       connection = new URL(String.format(USER_FEED_URL, userName)).openConnection();
     } catch (UnknownHostException e) {
@@ -81,7 +81,11 @@ public class Processor {
         if (is_private == null) {
           is_private = parseBoolean(getMatch(next, IS_PRIVATE_PATTERN), ":", 1);
         }
-        if (id != null && follows != null && followed_by != null && biography != null && post_count != null && is_private != null) {
+        if (img_url == null) {
+          img_url = parseString(getMatch(next, PROFILE_IMG_URL_PATTERN), "\"", 3, 0);
+        }
+        if (id != null && follows != null && followed_by != null && biography != null && post_count != null && is_private != null
+            && img_url != null) {
           break;
         }
       }
@@ -90,7 +94,7 @@ public class Processor {
     } catch (IOException e) {
       throw new UserNotFoundException(userName);
     }
-    return new User(id, userName, R.drawable.ic_diamond, post_count, follows, followed_by, biography, is_private);
+    return new User(id, userName, img_url, post_count, follows, followed_by, biography, is_private);
   }
 //  public void getUserImageUrls(String userName) {
 //    Set<String> urls = getContent(String.format(USER_FEED_URL, userName), PROFILE_IMG_URL_PATTERN);

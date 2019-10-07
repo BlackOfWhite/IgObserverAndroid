@@ -2,6 +2,7 @@ package org.ig.observer.pniewinski;
 
 import static org.ig.observer.pniewinski.MainActivity.LOG_TAG;
 
+import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.Spannable;
@@ -18,18 +19,30 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import java.util.List;
 import org.apache.commons.text.StringEscapeUtils;
+import org.ig.observer.pniewinski.image.DownloadImageTask;
+import org.ig.observer.pniewinski.image.Utils;
 import org.ig.observer.pniewinski.model.User;
 
 public class IgListAdapter extends ArrayAdapter {
 
   private static final StyleSpan BOLD_STYLE = new StyleSpan(android.graphics.Typeface.BOLD);
-  private final MainActivity mainActivity;
+  private MainActivity mainActivity;
   private List<User> users;
 
   public IgListAdapter(MainActivity mainActivity, List<User> list) {
     super(mainActivity, R.layout.listview_row, list);
     this.mainActivity = mainActivity;
     this.users = list;
+  }
+
+  private void loadAsyncImage(ImageView imageView, User user) {
+    final String imgName = user.getId() + ".png";
+    Bitmap b = Utils.loadBitmap(mainActivity, imgName);
+    if (b == null) {
+      new DownloadImageTask(mainActivity, imageView, imgName).execute(user.getImg_url());
+    } else {
+      imageView.setImageBitmap(b);
+    }
   }
 
   public View getView(final int position, View view, ViewGroup parent) {
@@ -52,11 +65,11 @@ public class IgListAdapter extends ArrayAdapter {
     final User user = users.get(position);
     nameTextField.setText(user.getName());
     infoTextField.setText(user.getInfo());
-    imageView.setImageResource(user.getImage());
+    loadAsyncImage(imageView, user);
     // Bold and formatted text
     String formattedText = getFormattedText(user.getBiography());
     final SpannableStringBuilder sb = new SpannableStringBuilder("Biography: " + formattedText);
-    sb.setSpan(BOLD_STYLE, 0, "Biography:" .length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+    sb.setSpan(BOLD_STYLE, 0, "Biography:".length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
     biographyTextView.setText(sb);
     return rowView;
   }
