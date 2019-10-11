@@ -5,8 +5,12 @@ import static org.ig.observer.pniewinski.MainActivity.LOG_TAG;
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AlertDialog.Builder;
+import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -25,6 +29,8 @@ import org.ig.observer.pniewinski.model.User;
 
 public class IgListAdapter extends ArrayAdapter {
 
+  private static final Spanned DIALOG_MESSAGE = (Html.fromHtml("&#8226; Click list item to see user details.<br/>\n\n"
+      + "&#8226; Click and hold to enter notification settings."));
   private static final StyleSpan BOLD_STYLE = new StyleSpan(android.graphics.Typeface.BOLD);
   private MainActivity mainActivity;
   private List<User> users;
@@ -59,29 +65,48 @@ public class IgListAdapter extends ArrayAdapter {
         }
       }
     });
-    TextView biographyTextView = (TextView) rowView.findViewById(R.id.biography_text_view);
 
-    //this code sets the values of the objects to values from the arrays
+    // Main section
     final User user = users.get(position);
     nameTextField.setText(user.getName());
     infoTextField.setText(user.getInfo());
     loadAsyncImage(imageView, user);
-    // Bold and formatted text
+    // Biography & bold and formatted text
+    TextView biographyTextView = (TextView) rowView.findViewById(R.id.biography_text_view);
     String formattedText = getFormattedText(user.getBiography());
     final SpannableStringBuilder sb = new SpannableStringBuilder("Biography: " + formattedText);
     sb.setSpan(BOLD_STYLE, 0, "Biography:".length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
     biographyTextView.setText(sb);
+    // Settings
+    TextView settingsTextView = (TextView) rowView.findViewById(R.id.settings_text_view);
+    settingsTextView.setText("Settings section");
+
     return rowView;
   }
 
   public void refreshItems(List<User> list) {
+    refreshItems(list, false);
+  }
+
+  public void refreshItems(List<User> list, boolean showDialog) {
     users = list;
     Handler handler = new Handler(Looper.getMainLooper());
     handler.post(new Runnable() {
       public void run() {
         notifyDataSetChanged();
+        if (showDialog) {
+          showInformationalDialog();
+        }
       }
     });
+  }
+
+  private void showInformationalDialog() {
+    Log.i(LOG_TAG, "showInformationalDialog: show");
+    AlertDialog alertDialog = new Builder(mainActivity).setTitle("Tip")
+        .setMessage(DIALOG_MESSAGE)
+        .setIcon(R.drawable.ic_user_not_found).setPositiveButton("OK", null).create();
+    alertDialog.show();
   }
 
   private String getFormattedText(final String text) {

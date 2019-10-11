@@ -55,13 +55,26 @@
   </RelativeLayout>
   <LinearLayout
     android:layout_below="@+id/layout_top"
-    android:id="@+id/layout_bottom"
+    android:id="@+id/layout_details_bottom"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:visibility="gone"
     android:orientation="vertical">
     <TextView
       android:id="@+id/biography_text_view"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:lines="5"/>
+  </LinearLayout>
+  <LinearLayout
+    android:layout_below="@+id/layout_top"
+    android:id="@+id/layout_settings_bottom"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:visibility="gone"
+    android:orientation="vertical">
+    <TextView
+      android:id="@+id/settings_text_view"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:lines="5"/>

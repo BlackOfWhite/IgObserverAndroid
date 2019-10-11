@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.EditText;
 import android.widget.ListView;
 import java.io.FileInputStream;
@@ -57,17 +58,35 @@ public class MainActivity extends AppCompatActivity {
     adapter = new IgListAdapter(this, users);
     listView = (ListView) findViewById(R.id.list_view);
     listView.setAdapter(adapter);
+    listView.setLongClickable(true);
     listView.setOnItemClickListener(new OnItemClickListener() {
       @Override
       public void onItemClick(AdapterView<?> parent, View view, int position,
           long id) {
         Log.i(LOG_TAG, "onItemClick: " + position);
-        View bottomView = view.findViewById((R.id.layout_bottom));
-        if (bottomView.getVisibility() == View.GONE) {
-          bottomView.setVisibility(View.VISIBLE);
+        View bottomDetailsView = view.findViewById((R.id.layout_details_bottom));
+        if (bottomDetailsView.getVisibility() == View.GONE) {
+          View bottomSettingsView = view.findViewById(R.id.layout_settings_bottom);
+          bottomSettingsView.setVisibility(View.GONE);
+          bottomDetailsView.setVisibility(View.VISIBLE);
         } else {
-          bottomView.setVisibility(View.GONE);
+          bottomDetailsView.setVisibility(View.GONE);
         }
+      }
+    });
+    listView.setOnItemLongClickListener(new OnItemLongClickListener() {
+      @Override
+      public boolean onItemLongClick(AdapterView<?> adapterView, View view, int pos, long id) {
+        Log.i(LOG_TAG, "onItemClickLong: " + pos);
+        View bottomSettingsView = view.findViewById((R.id.layout_settings_bottom));
+        if (bottomSettingsView.getVisibility() == View.GONE) {
+          View bottomDetailsView = view.findViewById(R.id.layout_details_bottom);
+          bottomDetailsView.setVisibility(View.GONE);
+          bottomSettingsView.setVisibility(View.VISIBLE);
+        } else {
+          bottomSettingsView.setVisibility(View.GONE);
+        }
+        return true;
       }
     });
     final FloatingActionButton fabButton = (FloatingActionButton) findViewById(R.id.fab_add_new);
@@ -171,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
   public void addUserToList(User user) {
     Log.i(LOG_TAG, "addUserToList: " + user);
     users.add(user);
-    adapter.refreshItems(users);
+    adapter.refreshItems(users, users.size() == 1);
     saveToFile(users);
   }
 
