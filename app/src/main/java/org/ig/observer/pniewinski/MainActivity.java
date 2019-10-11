@@ -36,7 +36,7 @@ import org.ig.observer.pniewinski.service.AlarmReceiver;
 public class MainActivity extends AppCompatActivity {
 
   public static final String LOG_TAG = "IG_TAG";
-  private static final Long SERVICE_PERIOD = 300000L; // 5min
+  private static final Long SERVICE_INTERVAL = 300000L; // 5min
   private static final String FILE_NAME = "ig_observer_storage";
   private static final int MAX_OBSERVED = 10;
   private static List<User> users = new ArrayList<>();
@@ -95,10 +95,8 @@ public class MainActivity extends AppCompatActivity {
     // Setup periodic alarm every every half hour from this point onwards
     long firstMillis = System.currentTimeMillis(); // alarm is set right away
     AlarmManager alarm = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-    // First parameter is the type: ELAPSED_REALTIME, ELAPSED_REALTIME_WAKEUP, RTC_WAKEUP
-    // Interval can be INTERVAL_FIFTEEN_MINUTES, INTERVAL_HALF_HOUR, INTERVAL_HOUR, INTERVAL_DAY
     alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, firstMillis,
-        SERVICE_PERIOD, pIntent); // every 5 min
+        SERVICE_INTERVAL, pIntent); // every 5 min
   }
 
   @Override
