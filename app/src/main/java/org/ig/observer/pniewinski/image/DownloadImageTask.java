@@ -1,15 +1,18 @@
 package org.ig.observer.pniewinski.image;
 
+import static org.ig.observer.pniewinski.activities.MainActivity.LOG_TAG;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
+import android.util.Log;
 import android.widget.ImageView;
 import java.io.InputStream;
 
 public class DownloadImageTask extends AsyncTask {
 
-  private final  ImageView imageView;
+  private final ImageView imageView;
   private final String picName;
   private final Context context;
 
@@ -34,6 +37,7 @@ public class DownloadImageTask extends AsyncTask {
       InputStream in = new java.net.URL(urlToDisplay).openStream();
       mIcon11 = BitmapFactory.decodeStream(in);
     } catch (Exception e) {
+      Log.w(LOG_TAG, "doInBackground: Unexpected exception.", e);
     }
     return mIcon11;
   }

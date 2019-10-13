@@ -33,7 +33,7 @@ public class IgListAdapter extends ArrayAdapter {
   private static final Spanned DIALOG_MESSAGE = (Html.fromHtml("&#8226; Click list item to see user details.<br/><br/>"
       + "&#8226; Click and hold to enter notification settings."));
   private static final StyleSpan BOLD_STYLE = new StyleSpan(android.graphics.Typeface.BOLD);
-  private MainActivity mainActivity;
+  private final MainActivity mainActivity;
   private List<User> users;
 
   public IgListAdapter(MainActivity mainActivity, List<User> list) {
@@ -100,9 +100,10 @@ public class IgListAdapter extends ArrayAdapter {
 
   private void showInformationalDialog() {
     Log.i(LOG_TAG, "showInformationalDialog: show");
-    AlertDialog alertDialog = new Builder(mainActivity).setTitle("Tip")
+    AlertDialog alertDialog = new Builder(mainActivity, R.style.AlertDialogStyle).setTitle("Tip")
         .setMessage(DIALOG_MESSAGE)
         .setIcon(R.drawable.ic_user_not_found).setPositiveButton("OK", null).create();
+
     alertDialog.show();
   }
 

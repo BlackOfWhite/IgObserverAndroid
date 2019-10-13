@@ -1,5 +1,8 @@
 package org.ig.observer.pniewinski.activities;
 
+import static org.ig.observer.pniewinski.activities.SettingsActivity.SELECTED_USER_NAME;
+import static org.ig.observer.pniewinski.activities.SettingsActivity.SELECTED_USER_POSITION;
+
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -79,9 +82,9 @@ public class MainActivity extends AppCompatActivity {
       public boolean onItemLongClick(AdapterView<?> adapterView, View view, int pos, long id) {
         Log.i(LOG_TAG, "onItemClickLong: " + pos);
         Intent myIntent = new Intent(MainActivity.this, SettingsActivity.class);
-        myIntent.putExtra("user_position", pos);
+        myIntent.putExtra(SELECTED_USER_POSITION, pos);
         User selectedUser = users.get(pos);
-        myIntent.putExtra("user_name", selectedUser.getName());
+        myIntent.putExtra(SELECTED_USER_NAME, selectedUser.getName());
         MainActivity.this.startActivity(myIntent);
         return true;
       }

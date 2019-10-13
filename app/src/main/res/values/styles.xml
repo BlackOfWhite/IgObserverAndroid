@@ -7,7 +7,14 @@
   </style>
 
   <style name="AlertDialogStyle" parent="Theme.AppCompat.Light.Dialog">
-    <item name="android:textColor">@color/colorPrimaryDark</item>
+    <item name="colorPrimary">@color/colorPrimary</item>
+    <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+    <item name="colorAccent">@color/colorPrimary</item>
+  </style>
+
+  <style name="SettingsStyle" parent="Theme.AppCompat.Light.DarkActionBar">
+    <item name="colorPrimary">@color/colorPrimary</item>
+    <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
     <item name="colorAccent">@color/colorPrimary</item>
   </style>
 </resources>

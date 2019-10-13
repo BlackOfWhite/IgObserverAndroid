@@ -15,7 +15,7 @@ public class User implements Serializable {
   private Boolean is_private;
 
   public User(Long id, String name, String img_url) {
-    this(id, name, img_url, 0l, 0l, 0l, "", false);
+    this(id, name, img_url, 0L, 0L, 0L, "", false);
   }
 
   public User(Long id, String name, String img_url, Long posts, Long follows, Long followed_by, String biography, Boolean is_private) {

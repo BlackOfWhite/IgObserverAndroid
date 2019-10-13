@@ -2,48 +2,31 @@ package org.ig.observer.pniewinski.activities;
 
 import static org.ig.observer.pniewinski.activities.MainActivity.LOG_TAG;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
-import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.util.Log;
 import android.view.MenuItem;
-import java.util.List;
 import org.ig.observer.pniewinski.R;
 
-/**
- * A {@link PreferenceActivity} that presents a set of application settings. On
- * handset devices, settings are presented as a single list. On tablets,
- * settings are split by category, with category headers shown to the left of
- * the list of settings.
- * <p>
- * See <a href="http://developer.android.com/design/patterns/settings.html">
- * Android Design: Settings</a> for design guidelines and the <a
- * href="http://developer.android.com/guide/topics/ui/settings.html">Settings
- * API Guide</a> for more information on developing a Settings UI.
- */
 public class SettingsActivity extends AppCompatPreferenceActivity {
 
-  private static final String SELECTED_USER_POSITION = "user_position";
-  private static final String SELECTED_USER_NAME = "user_name";
-
-  /**
-   * A preference value change listener that updates the preference's summary
-   * to reflect its new value.
-   */
-  private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
+  public static final String SELECTED_USER_POSITION = "user_position";
+  public static final String SELECTED_USER_NAME = "user_name";
+  private static final Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
     @Override
-    public boolean onPreferenceChange(Preference preference, Object value) {
-      String stringValue = value.toString();
+    public boolean onPreferenceChange(Preference preference, Object newValue) {
+      String stringValue = newValue.toString();
 
       if (preference instanceof ListPreference) {
         // For list preferences, look up the correct display value in
@@ -56,10 +39,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             index >= 0
                 ? listPreference.getEntries()[index]
                 : null);
-
+      } else if (preference instanceof EditTextPreference) {
+        if (preference.getKey().equals("key_gallery_name")) {
+          // update the changed gallery name to summary filed
+          preference.setSummary(stringValue);
+        }
       } else {
-        // For all other preferences, set the summary to the value's
-        // simple string representation.
         preference.setSummary(stringValue);
       }
       return true;
@@ -98,9 +83,32 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             .getString(preference.getKey(), ""));
   }
 
+  /**
+   * Email client intent to send support mail
+   * Appends the necessary device information to email body
+   * useful when providing support
+   */
+  public static void sendFeedback(Context context) {
+    String body = null;
+    try {
+      body = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
+      body = "\n\n-----------------------------\nPlease don't remove this information\n Device OS: Android \n Device OS version: " +
+          Build.VERSION.RELEASE + "\n App Version: " + body + "\n Device Brand: " + Build.BRAND +
+          "\n Device Model: " + Build.MODEL + "\n Device Manufacturer: " + Build.MANUFACTURER;
+    } catch (PackageManager.NameNotFoundException e) {
+    }
+    Intent intent = new Intent(Intent.ACTION_SEND);
+    intent.setType("message/rfc822");
+    intent.putExtra(Intent.EXTRA_EMAIL, new String[]{"contact@androidhive.info"});
+    intent.putExtra(Intent.EXTRA_SUBJECT, "Query from android app");
+    intent.putExtra(Intent.EXTRA_TEXT, body);
+    context.startActivity(Intent.createChooser(intent, context.getString(R.string.choose_email_client)));
+  }
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    setTheme(R.style.SettingsStyle);
     if (savedInstanceState != null) {
       selectedUserPosition = savedInstanceState.getInt(SELECTED_USER_POSITION, -1);
       Log.i(LOG_TAG, "onCreate: restore intent position: " + selectedUserPosition);
@@ -114,6 +122,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
       Log.i(LOG_TAG, "onCreate: intent name: " + selectedUserName);
     }
     setupActionBar();
+    getFragmentManager().beginTransaction().replace(android.R.id.content, new MainPreferenceFragment()).commit();
   }
 
   // Save before going into deeper settings
@@ -152,119 +161,32 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     return super.onMenuItemSelected(featureId, item);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
-  public boolean onIsMultiPane() {
-    return isXLargeTablet(this);
+  public boolean onOptionsItemSelected(MenuItem item) {
+    if (item.getItemId() == android.R.id.home) {
+      onBackPressed();
+    }
+    return super.onOptionsItemSelected(item);
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-  public void onBuildHeaders(List<Header> target) {
-    loadHeadersFromResource(R.xml.pref_headers, target);
-  }
-
-  /**
-   * This method stops fragment injection in malicious applications.
-   * Make sure to deny any unknown fragments here.
-   */
-  protected boolean isValidFragment(String fragmentName) {
-    return PreferenceFragment.class.getName().equals(fragmentName)
-        || GeneralPreferenceFragment.class.getName().equals(fragmentName)
-        || DataSyncPreferenceFragment.class.getName().equals(fragmentName)
-        || NotificationPreferenceFragment.class.getName().equals(fragmentName);
-  }
-
-  /**
-   * This fragment shows general preferences only. It is used when the
-   * activity is showing a two-pane settings UI.
-   */
-  @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-  public static class GeneralPreferenceFragment extends PreferenceFragment {
+  public static class MainPreferenceFragment extends PreferenceFragment {
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(final Bundle savedInstanceState) {
       super.onCreate(savedInstanceState);
-      addPreferencesFromResource(R.xml.pref_general);
-      setHasOptionsMenu(true);
+      addPreferencesFromResource(R.xml.pref_main);
 
-      // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-      // to their values. When their values change, their summaries are
-      // updated to reflect the new value, per the Android Design
-      // guidelines.
-//      bindPreferenceSummaryToValue(findPreference("example_text"));
-//      bindPreferenceSummaryToValue(findPreference("example_list"));
-    }
+      // gallery EditText change listener
+      bindPreferenceSummaryToValue(findPreference(getString(R.string.key_gallery_name)));
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-      int id = item.getItemId();
-      if (id == android.R.id.home) {
-        startActivity(new Intent(getActivity(), SettingsActivity.class));
-        return true;
-      }
-      return super.onOptionsItemSelected(item);
-    }
-  }
-
-  /**
-   * This fragment shows notification preferences only. It is used when the
-   * activity is showing a two-pane settings UI.
-   */
-  @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-  public static class NotificationPreferenceFragment extends PreferenceFragment {
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-      super.onCreate(savedInstanceState);
-      addPreferencesFromResource(R.xml.pref_notification);
-      setHasOptionsMenu(true);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-      int id = item.getItemId();
-      if (id == android.R.id.home) {
-        startActivity(new Intent(getActivity(), SettingsActivity.class));
-        return true;
-      }
-      return super.onOptionsItemSelected(item);
-    }
-  }
-
-  /**
-   * This fragment shows data and sync preferences only. It is used when the
-   * activity is showing a two-pane settings UI.
-   */
-  @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-  public static class DataSyncPreferenceFragment extends PreferenceFragment {
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-      super.onCreate(savedInstanceState);
-      addPreferencesFromResource(R.xml.pref_data_sync);
-      setHasOptionsMenu(true);
-
-      // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-      // to their values. When their values change, their summaries are
-      // updated to reflect the new value, per the Android Design
-      // guidelines.
-      bindPreferenceSummaryToValue(findPreference("sync_frequency"));
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-      int id = item.getItemId();
-      if (id == android.R.id.home) {
-        startActivity(new Intent(getActivity(), SettingsActivity.class));
-        return true;
-      }
-      return super.onOptionsItemSelected(item);
+      // feedback preference click listener
+      Preference myPref = findPreference(getString(R.string.key_send_feedback));
+      myPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+        public boolean onPreferenceClick(Preference preference) {
+          sendFeedback(getActivity());
+          return true;
+        }
+      });
     }
   }
 }
