@@ -1,17 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
   <PreferenceCategory android:title="General">
-    <EditTextPreference
-      android:defaultValue="@string/default_gallery_storage"
-      android:key="@string/key_gallery_name"
-      android:summary="@string/default_gallery_storage"
-      android:title="@string/title_gallery_storage"/>
-
-    <CheckBoxPreference
+    <SwitchPreference
       android:defaultValue="true"
       android:key="@string/key_upload_over_wifi"
-      android:summary="@string/summary_upload_over_wifi"
-      android:title="@string/title_auto_upload"/>
+      android:summary="@string/summary_enable_notifications"
+      android:title="@string/title_enable_notifications"/>
 
     <ListPreference
       android:defaultValue="3"
@@ -39,39 +33,15 @@
   </PreferenceCategory>
 
   <PreferenceCategory android:title="@string/pref_header_about">
-
     <Preference
-      android:selectable="false"
-      android:summary="@string/summary_about"/>
-
-    <Preference
-      android:summary="@string/app_version"
-      android:title="@string/title_version"/>
-
-    <Preference
-      android:key="@string/key_send_feedback"
-      android:summary="@string/summary_support"
-      android:title="@string/title_send_feedback"/>
-
-    <!-- preference opens url in browser -->
-    <Preference
-      android:summary="@string/summary_faq"
-      android:title="@string/title_faq">
+      android:key="pref_header_about"
+      android:autoLink="web"
+      android:clickable="true"
+      android:summary="@string/summary_about">
       <intent
         android:action="android.intent.action.VIEW"
-        android:data="@string/url_faq"/>
-    </Preference>
-
-    <Preference android:title="@string/privacy_policy">
-      <intent
-        android:action="android.intent.action.VIEW"
-        android:data="@string/url_privacy"/>
-    </Preference>
-
-    <Preference android:title="@string/title_terms">
-      <intent
-        android:action="android.intent.action.VIEW"
-        android:data="@string/url_terms"/>
+        android:data="https://www.instagram.com/niewinskipiotr/"
+        />
     </Preference>
   </PreferenceCategory>
 </PreferenceScreen>

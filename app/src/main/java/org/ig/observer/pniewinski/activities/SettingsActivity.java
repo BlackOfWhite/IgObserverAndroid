@@ -4,17 +4,15 @@ import static org.ig.observer.pniewinski.activities.MainActivity.LOG_TAG;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.os.Build;
 import android.os.Bundle;
-import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
+import android.text.Html;
 import android.util.Log;
 import android.view.MenuItem;
 import org.ig.observer.pniewinski.R;
@@ -39,11 +37,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             index >= 0
                 ? listPreference.getEntries()[index]
                 : null);
-      } else if (preference instanceof EditTextPreference) {
-        if (preference.getKey().equals("key_gallery_name")) {
-          // update the changed gallery name to summary filed
-          preference.setSummary(stringValue);
-        }
       } else {
         preference.setSummary(stringValue);
       }
@@ -81,28 +74,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         PreferenceManager
             .getDefaultSharedPreferences(preference.getContext())
             .getString(preference.getKey(), ""));
-  }
-
-  /**
-   * Email client intent to send support mail
-   * Appends the necessary device information to email body
-   * useful when providing support
-   */
-  public static void sendFeedback(Context context) {
-    String body = null;
-    try {
-      body = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
-      body = "\n\n-----------------------------\nPlease don't remove this information\n Device OS: Android \n Device OS version: " +
-          Build.VERSION.RELEASE + "\n App Version: " + body + "\n Device Brand: " + Build.BRAND +
-          "\n Device Model: " + Build.MODEL + "\n Device Manufacturer: " + Build.MANUFACTURER;
-    } catch (PackageManager.NameNotFoundException e) {
-    }
-    Intent intent = new Intent(Intent.ACTION_SEND);
-    intent.setType("message/rfc822");
-    intent.putExtra(Intent.EXTRA_EMAIL, new String[]{"contact@androidhive.info"});
-    intent.putExtra(Intent.EXTRA_SUBJECT, "Query from android app");
-    intent.putExtra(Intent.EXTRA_TEXT, body);
-    context.startActivity(Intent.createChooser(intent, context.getString(R.string.choose_email_client)));
   }
 
   @Override
@@ -176,17 +147,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
       super.onCreate(savedInstanceState);
       addPreferencesFromResource(R.xml.pref_main);
 
-      // gallery EditText change listener
-      bindPreferenceSummaryToValue(findPreference(getString(R.string.key_gallery_name)));
-
-      // feedback preference click listener
-      Preference myPref = findPreference(getString(R.string.key_send_feedback));
-      myPref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-        public boolean onPreferenceClick(Preference preference) {
-          sendFeedback(getActivity());
-          return true;
-        }
-      });
+      // Just to make it look good
+      Preference customPref = findPreference("pref_header_about");
+      customPref.setSummary(Html.fromHtml(
+          "Made with ❤ by <a href=https://www.instagram.com/niewinskipiotr/>@niewinskipiotr</a>. Not affiliated with Instagram and we do not host any of the Instagram Stories on this website, all rights belong to their respective owners."));
     }
   }
 }
