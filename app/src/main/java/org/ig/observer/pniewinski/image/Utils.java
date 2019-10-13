@@ -1,6 +1,6 @@
 package org.ig.observer.pniewinski.image;
 
-import static org.ig.observer.pniewinski.MainActivity.LOG_TAG;
+import static org.ig.observer.pniewinski.activities.MainActivity.LOG_TAG;
 
 import android.content.Context;
 import android.graphics.Bitmap;

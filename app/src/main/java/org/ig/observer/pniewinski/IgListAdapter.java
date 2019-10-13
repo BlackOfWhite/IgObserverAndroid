@@ -1,6 +1,6 @@
 package org.ig.observer.pniewinski;
 
-import static org.ig.observer.pniewinski.MainActivity.LOG_TAG;
+import static org.ig.observer.pniewinski.activities.MainActivity.LOG_TAG;
 
 import android.graphics.Bitmap;
 import android.os.Handler;
@@ -23,13 +23,14 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import java.util.List;
 import org.apache.commons.text.StringEscapeUtils;
+import org.ig.observer.pniewinski.activities.MainActivity;
 import org.ig.observer.pniewinski.image.DownloadImageTask;
 import org.ig.observer.pniewinski.image.Utils;
 import org.ig.observer.pniewinski.model.User;
 
 public class IgListAdapter extends ArrayAdapter {
 
-  private static final Spanned DIALOG_MESSAGE = (Html.fromHtml("&#8226; Click list item to see user details.<br/>\n\n"
+  private static final Spanned DIALOG_MESSAGE = (Html.fromHtml("&#8226; Click list item to see user details.<br/><br/>"
       + "&#8226; Click and hold to enter notification settings."));
   private static final StyleSpan BOLD_STYLE = new StyleSpan(android.graphics.Typeface.BOLD);
   private MainActivity mainActivity;
@@ -77,10 +78,6 @@ public class IgListAdapter extends ArrayAdapter {
     final SpannableStringBuilder sb = new SpannableStringBuilder("Biography: " + formattedText);
     sb.setSpan(BOLD_STYLE, 0, "Biography:".length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
     biographyTextView.setText(sb);
-    // Settings
-    TextView settingsTextView = (TextView) rowView.findViewById(R.id.settings_text_view);
-    settingsTextView.setText("Settings section");
-
     return rowView;
   }
 

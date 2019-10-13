@@ -1,4 +1,4 @@
-package org.ig.observer.pniewinski;
+package org.ig.observer.pniewinski.activities;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.ig.observer.pniewinski.IgListAdapter;
+import org.ig.observer.pniewinski.R;
 import org.ig.observer.pniewinski.exceptions.NetworkNotFound;
 import org.ig.observer.pniewinski.exceptions.UserNotFoundException;
 import org.ig.observer.pniewinski.model.User;
@@ -66,8 +68,6 @@ public class MainActivity extends AppCompatActivity {
         Log.i(LOG_TAG, "onItemClick: " + position);
         View bottomDetailsView = view.findViewById((R.id.layout_details_bottom));
         if (bottomDetailsView.getVisibility() == View.GONE) {
-          View bottomSettingsView = view.findViewById(R.id.layout_settings_bottom);
-          bottomSettingsView.setVisibility(View.GONE);
           bottomDetailsView.setVisibility(View.VISIBLE);
         } else {
           bottomDetailsView.setVisibility(View.GONE);
@@ -78,14 +78,11 @@ public class MainActivity extends AppCompatActivity {
       @Override
       public boolean onItemLongClick(AdapterView<?> adapterView, View view, int pos, long id) {
         Log.i(LOG_TAG, "onItemClickLong: " + pos);
-        View bottomSettingsView = view.findViewById((R.id.layout_settings_bottom));
-        if (bottomSettingsView.getVisibility() == View.GONE) {
-          View bottomDetailsView = view.findViewById(R.id.layout_details_bottom);
-          bottomDetailsView.setVisibility(View.GONE);
-          bottomSettingsView.setVisibility(View.VISIBLE);
-        } else {
-          bottomSettingsView.setVisibility(View.GONE);
-        }
+        Intent myIntent = new Intent(MainActivity.this, SettingsActivity.class);
+        myIntent.putExtra("user_position", pos);
+        User selectedUser = users.get(pos);
+        myIntent.putExtra("user_name", selectedUser.getName());
+        MainActivity.this.startActivity(myIntent);
         return true;
       }
     });

@@ -2,27 +2,40 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
   package="org.ig.observer.pniewinski">
 
-  <uses-permission android:name="android.permission.INTERNET"></uses-permission>
+  <uses-permission android:name="android.permission.INTERNET"/>
+
   <application
     android:allowBackup="true"
+    android:configChanges="orientation|keyboardHidden|screenSize"
     android:icon="@drawable/ic_binoculars"
     android:label="@string/app_name"
     android:supportsRtl="true"
-    android:configChanges="orientation|keyboardHidden|screenSize"
     android:theme="@style/AppTheme">
-    <activity android:name=".MainActivity">
+    <activity android:name=".activities.MainActivity">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
+
         <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>
-
     </activity>
+
     <receiver
       android:name=".service.AlarmReceiver"
       android:process=":remote">
     </receiver>
+
     <service
-      android:name=".service.IgService"
-      android:exported="false"/>
+      android:exported="false"
+      android:name=".service.IgService"/>
+
+    <activity
+      android:label="@string/title_activity_settings"
+      android:name=".activities.SettingsActivity"
+      android:parentActivityName=".activities.MainActivity">
+      <meta-data
+        android:name="android.support.PARENT_ACTIVITY"
+        android:value="org.ig.observer.pniewinski.activities.MainActivity"/>
+    </activity>
   </application>
+
 </manifest>

@@ -25,4 +25,57 @@
   <!-- Settings -->
   <string name="s_story">Viewing Instagram stories requires user to be signed in, therefore if you want to access this feature we suggest you to use built-in login functionality.
    You will be informed as soon as observed person adds new story. Moreover, you can also view their stories without being displayed on list of users who viewed it!</string>
+  <string name="title_activity_settings">Settings</string>
+
+  <!-- Strings related to Settings -->
+
+  <!-- Example General settings -->
+  <string name="pref_header_general">General</string>
+
+  <string name="pref_title_enable_notifications">Enable notifications</string>
+  <string name="pref_description_enable_notifications">Notifications about changes in all observed accounts</string>
+
+  <!-- Example settings for Data & Sync -->
+  <string name="pref_header_data_sync">Data &amp; sync</string>
+
+  <string name="pref_title_sync_frequency">Observer frequency, for all accounts</string>
+  <string-array name="pref_sync_frequency_titles">
+    <item>1 minute</item>
+    <item>5 minutes</item>
+    <item>15 minutes</item>
+    <item>30 minutes</item>
+    <item>1 hour</item>
+    <item>3 hours</item>
+    <item>Never</item>
+  </string-array>
+  <string-array name="pref_sync_frequency_values">
+    <item>1</item>
+    <item>5</item>
+    <item>15</item>
+    <item>30</item>
+    <item>60</item>
+    <item>180</item>
+    <item>-1</item>
+  </string-array>
+
+  <string-array name="list_preference_entries">
+    <item>Entry 1</item>
+    <item>Entry 2</item>
+    <item>Entry 3</item>
+  </string-array>
+
+  <string-array name="list_preference_entry_values">
+    <item>1</item>
+    <item>2</item>
+    <item>3</item>
+  </string-array>
+
+  <string-array name="multi_select_list_preference_default_value"/>
+
+  <!-- Example settings for Notifications -->
+  <string name="pref_header_notifications">Notifications</string>
+
+  <string name="pref_title_new_message_notifications">New message notifications</string>
+
+  <string name="pref_title_vibrate">Vibrate</string>
 </resources>

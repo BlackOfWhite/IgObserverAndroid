@@ -1,6 +1,6 @@
 package org.ig.observer.pniewinski.service;
 
-import static org.ig.observer.pniewinski.MainActivity.LOG_TAG;
+import static org.ig.observer.pniewinski.activities.MainActivity.LOG_TAG;
 
 import android.app.IntentService;
 import android.content.Intent;

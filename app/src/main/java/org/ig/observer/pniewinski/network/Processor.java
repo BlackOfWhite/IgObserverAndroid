@@ -1,6 +1,6 @@
 package org.ig.observer.pniewinski.network;
 
-import static org.ig.observer.pniewinski.MainActivity.LOG_TAG;
+import static org.ig.observer.pniewinski.activities.MainActivity.LOG_TAG;
 import static org.ig.observer.pniewinski.network.util.ResponseParser.getMatch;
 import static org.ig.observer.pniewinski.network.util.ResponseParser.parseBoolean;
 import static org.ig.observer.pniewinski.network.util.ResponseParser.parseLong;
