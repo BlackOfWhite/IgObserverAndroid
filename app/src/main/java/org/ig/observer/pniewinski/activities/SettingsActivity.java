@@ -43,8 +43,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
       return true;
     }
   };
+  private static String selectedUserName;
   private int selectedUserPosition;
-  private String selectedUserName;
 
   /**
    * Helper method to determine if the device has an extra-large screen. For
@@ -114,9 +114,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     if (actionBar != null) {
       // Show the Up button in the action bar.
       actionBar.setDisplayHomeAsUpEnabled(true);
-      if (selectedUserName != null) {
-        actionBar.setTitle("Settings for " + selectedUserName);
-      }
     }
   }
 
@@ -148,9 +145,14 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
       addPreferencesFromResource(R.xml.pref_main);
 
       // Just to make it look good
-      Preference customPref = findPreference("pref_header_about");
-      customPref.setSummary(Html.fromHtml(
+      Preference about = findPreference("pref_header_about");
+      about.setSummary(Html.fromHtml(
           "Made with ❤ by <a href=https://www.instagram.com/niewinskipiotr/>@niewinskipiotr</a>. Not affiliated with Instagram and we do not host any of the Instagram Stories on this website, all rights belong to their respective owners."));
+
+      // To show user name in title
+      Preference notificationsCategory = findPreference("key_notifications_category");
+      notificationsCategory.setTitle(Html.fromHtml("Notifications for <u>" + selectedUserName + "</u>"));
+
     }
   }
 }

@@ -3,23 +3,12 @@
   <PreferenceCategory android:title="General">
     <SwitchPreference
       android:defaultValue="true"
-      android:key="@string/key_upload_over_wifi"
+      android:key="@string/key_enable_notifications"
       android:summary="@string/summary_enable_notifications"
       android:title="@string/title_enable_notifications"/>
-
-    <ListPreference
-      android:defaultValue="3"
-      android:dialogTitle="@string/title_upload_quality"
-      android:entries="@array/pref_upload_quality_entries"
-      android:entryValues="@array/pref_upload_quality_values"
-      android:key="@string/key_upload_quality"
-      android:summary="@string/summary_upload_video_quality"
-      android:title="@string/title_upload_quality"/>
-
   </PreferenceCategory>
 
-  <PreferenceCategory android:title="@string/pref_title_notifications">
-
+  <PreferenceCategory android:title="@string/pref_title_notifications" android:key="@string/key_notifications_category">
     <SwitchPreference
       android:defaultValue="true"
       android:key="@string/notifications_new_message"
