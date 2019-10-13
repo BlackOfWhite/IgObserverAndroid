@@ -42,7 +42,7 @@ import org.ig.observer.pniewinski.service.AlarmReceiver;
 public class MainActivity extends AppCompatActivity {
 
   public static final String LOG_TAG = "IG_TAG";
-  private static final Long SERVICE_INTERVAL = 300000L; // 5min
+  private static final Long SERVICE_INTERVAL = 120_000L; // 2min
   private static final String FILE_NAME = "ig_observer_storage";
   private static final int MAX_OBSERVED = 10;
   private static List<User> users = new ArrayList<>();

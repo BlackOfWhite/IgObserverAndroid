@@ -8,17 +8,21 @@
       android:title="@string/title_enable_notifications"/>
   </PreferenceCategory>
 
-  <PreferenceCategory android:title="@string/pref_title_notifications" android:key="@string/key_notifications_category">
+  <PreferenceCategory
+    android:title="@string/pref_title_notifications"
+    android:key="@string/key_notifications_category">
     <SwitchPreference
       android:defaultValue="true"
-      android:key="@string/notifications_new_message"
-      android:title="@string/title_new_notification_sound"/>
-
+      android:key="@string/key_notification_biography"
+      android:title="@string/title_notification_biography"/>
     <SwitchPreference
       android:defaultValue="true"
-      android:key="@string/key_vibrate"
-      android:summary="@string/summary_vibrate"
-      android:title="@string/title_vibrate"/>
+      android:key="@string/key_notification_posts"
+      android:title="@string/title_notification_posts"/>
+    <SwitchPreference
+      android:defaultValue="true"
+      android:key="@string/key_notification_picture"
+      android:title="@string/title_notification_picture"/>
   </PreferenceCategory>
 
   <PreferenceCategory android:title="@string/pref_header_about">

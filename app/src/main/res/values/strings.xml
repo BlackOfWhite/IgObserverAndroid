@@ -39,10 +39,10 @@
   <string name="summary_about">Made with ❤ by <a href="https://www.instagram.com/niewinskipiotr/">@niewinskipiotr</a>. Not affiliated with Instagram and we do not host any of the Instagram Stories on this website, all rights belong to their respective owners.</string>
 
   <string name="pref_title_notifications">Notifications</string>
-  <string name="title_new_notification_sound">New message notification</string>
-  <string name="title_vibrate">Vibrate</string>
-  <string name="summary_vibrate">Vibrate on new notification</string>
-  <string name="notifications_new_message">notifications_new_message</string>
-  <string name="key_notifications_new_message_ringtone">key_notifications_new_message_ringtone</string>
-  <string name="key_vibrate">key_vibrate</string>
+  <string name="title_notification_biography">Biography</string>
+  <string name="key_notification_biography">key_notification_biography</string>
+  <string name="title_notification_posts">Posts</string>
+  <string name="key_notification_posts">key_notification_posts</string>
+  <string name="title_notification_picture">Profile picture</string>
+  <string name="key_notification_picture">key_notification_picture</string>
 </resources>
