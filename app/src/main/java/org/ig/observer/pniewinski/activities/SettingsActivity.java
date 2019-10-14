@@ -134,12 +134,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
       // User dependent preferences, use dynamic keys
       SharedPreferences preferences = getPreferenceManager().getSharedPreferences();
-      SwitchPreference biography = setupUserSpecificSwitchPreference("key_notification_biography", preferences);
-      SwitchPreference posts = setupUserSpecificSwitchPreference("key_notification_posts", preferences);
-      SwitchPreference picture = setupUserSpecificSwitchPreference("key_notification_picture", preferences);
-      SwitchPreference follows = setupUserSpecificSwitchPreference("key_notification_follows", preferences);
-      SwitchPreference followedBy = setupUserSpecificSwitchPreference("key_notification_followed_by", preferences);
-      SwitchPreference status = setupUserSpecificSwitchPreference("key_notification_account_status", preferences);
+      SwitchPreference biography = setupUserSpecificSwitchPreference(KEY_NOTIFICATION_BIOGRAPHY, preferences);
+      SwitchPreference posts = setupUserSpecificSwitchPreference(KEY_NOTIFICATION_POSTS, preferences);
+      SwitchPreference picture = setupUserSpecificSwitchPreference(KEY_NOTIFICATION_PICTURE, preferences);
+      SwitchPreference follows = setupUserSpecificSwitchPreference(KEY_NOTIFICATION_FOLLOWS, preferences);
+      SwitchPreference followedBy = setupUserSpecificSwitchPreference(KEY_NOTIFICATION_FOLLOWED_BY, preferences);
+      SwitchPreference status = setupUserSpecificSwitchPreference(KEY_NOTIFICATION_ACCOUNT_STATUS, preferences);
     }
 
     private SwitchPreference setupUserSpecificSwitchPreference(String preferenceKey, SharedPreferences sharedPreferences) {

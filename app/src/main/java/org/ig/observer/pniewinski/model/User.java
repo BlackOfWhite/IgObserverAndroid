@@ -14,13 +14,13 @@ public class User implements Serializable {
   private Long followed_by;
   private Long follows;
   private String biography;
-  private Boolean is_private;
+  private boolean is_private;
 
   public User(Long id, String name, String img_url) {
     this(id, name, img_url, 0L, 0L, 0L, "", false);
   }
 
-  public User(Long id, String name, String img_url, Long posts, Long follows, Long followed_by, String biography, Boolean is_private) {
+  public User(Long id, String name, String img_url, Long posts, Long follows, Long followed_by, String biography, boolean is_private) {
     this.id = id;
     this.img_url = img_url;
     this.name = name;

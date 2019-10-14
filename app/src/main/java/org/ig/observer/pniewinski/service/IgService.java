@@ -1,6 +1,12 @@
 package org.ig.observer.pniewinski.service;
 
 import static org.ig.observer.pniewinski.activities.MainActivity.LOG_TAG;
+import static org.ig.observer.pniewinski.activities.SettingsActivity.KEY_NOTIFICATION_ACCOUNT_STATUS;
+import static org.ig.observer.pniewinski.activities.SettingsActivity.KEY_NOTIFICATION_BIOGRAPHY;
+import static org.ig.observer.pniewinski.activities.SettingsActivity.KEY_NOTIFICATION_FOLLOWS;
+import static org.ig.observer.pniewinski.activities.SettingsActivity.KEY_NOTIFICATION_PICTURE;
+import static org.ig.observer.pniewinski.activities.SettingsActivity.KEY_NOTIFICATION_POSTS;
+import static org.ig.observer.pniewinski.activities.SettingsActivity.PREFERENCE_SEPARATOR;
 import static org.ig.observer.pniewinski.io.FileManager.loadUsersFromFile;
 
 import android.app.IntentService;
@@ -27,6 +33,9 @@ import org.ig.observer.pniewinski.network.Processor;
 
 public class IgService extends IntentService {
 
+  private SharedPreferences preferences;
+  private String preferencePattern = "%s" + PREFERENCE_SEPARATOR + "%s"; // username + PREFERENCE_SEPARATOR + key
+
   public IgService() {
     super("IgService");
   }
@@ -35,7 +44,7 @@ public class IgService extends IntentService {
   protected void onHandleIntent(Intent intent) {
     // Do the task here
     Log.i(LOG_TAG, "Starting IgService service run");
-    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+    preferences = PreferenceManager.getDefaultSharedPreferences(this);
     Log.i(LOG_TAG, "allPreferences: " + preferences.getAll());
     ArrayList<User> users = (ArrayList<User>) loadUsersFromFile(getApplicationContext());
     Log.i(LOG_TAG, "onHandleIntent::userList: " + users);
@@ -45,12 +54,10 @@ public class IgService extends IntentService {
   }
 
   private void processUsers(ArrayList<User> userList) {
-    Log.i(LOG_TAG, "processUsers::" + userList);
     Processor processor = new Processor();
     ArrayList<User> newUserList = new ArrayList<>();
     Map<User, String> userNotificationMessages = new HashMap<>();
     // Get notification settings
-
     for (User user : userList) {
       try {
         User newUser = processor.getUser(user.getName());
@@ -63,16 +70,19 @@ public class IgService extends IntentService {
             userNotificationMessages.put(user, userNotificationMsg);
           }
         } else {
-          // Skip user, something strange happened
+          // Skip user, they are the same
           newUserList.add(user);
         }
       } catch (Exception e) {
+        Log.w(LOG_TAG, "Exception while fetching data for user:: " + user.getName(), e);
         newUserList.add(user);
         continue;
       }
     }
     if (userList.size() != newUserList.size()) {
-      Log.i(LOG_TAG, "processUsers - lists have different size");
+      Log.i(LOG_TAG,
+          "processUsers - lists have different sizes :: " + userList.size() + " >> " + userList + "\n" + newUserList.size() + " >> "
+              + newUserList);
       return;
     }
     if (userList.equals(newUserList)) {
@@ -108,34 +118,49 @@ public class IgService extends IntentService {
 
   private String buildUserNotificationMessage(User oldUser, User newUser) {
     StringBuilder sb = new StringBuilder();
-    if (!oldUser.getBiography().equals(newUser.getBiography())) {
+    String userName = oldUser.getName();
+    if (!oldUser.getBiography().equals(newUser.getBiography()) && isNotificationEnabled(userName, KEY_NOTIFICATION_BIOGRAPHY)) {
       sb.append("The biography has changed. ");
     }
-    if (!oldUser.getImg_url().equals(newUser.getImg_url())) {
+    if (!oldUser.getImg_url().equals(newUser.getImg_url()) && isNotificationEnabled(userName, KEY_NOTIFICATION_PICTURE)) {
       sb.append("There is a new profile picture. ");
     }
-    if ((long) oldUser.getFollows() != newUser.getFollows()) {
+    if ((long) oldUser.getFollows() != newUser.getFollows() && isNotificationEnabled(userName, KEY_NOTIFICATION_FOLLOWS)) {
       Long old = oldUser.getFollows();
       Long newV = newUser.getFollows();
       long diff = newV - old;
       sb.append("User is now following " + Math.abs(diff) + " accounts " + (diff > 0 ? "more." : "less.") + " ");
     }
-    if ((long) oldUser.getFollowed_by() != newUser.getFollowed_by()) {
-      Long old = oldUser.getFollowed_by();
-      Long newV = newUser.getFollowed_by();
-      long diff = newV - old;
-      sb.append("User has just " + (diff > 0 ? "gained " : "lost ") + Math.abs(diff) + " followers. ");
-    }
-    if ((long) oldUser.getPosts() != newUser.getPosts()) {
+//    if ((long) oldUser.getFollowed_by() != newUser.getFollowed_by() && isNotificationEnabled(userName, KEY_NOTIFICATION_FOLLOWED_BY)) {
+//      Long old = oldUser.getFollowed_by();
+//      Long newV = newUser.getFollowed_by();
+//      long diff = newV - old;
+//      sb.append("User has just " + (diff > 0 ? "gained " : "lost ") + Math.abs(diff) + " followers. ");
+//    }
+    if ((long) oldUser.getPosts() != newUser.getPosts() && isNotificationEnabled(userName, KEY_NOTIFICATION_POSTS)) {
       Long old = oldUser.getPosts();
       Long newV = newUser.getPosts();
       long diff = newV - old;
       sb.append("User has just " + (diff > 0 ? "added " : "removed ") + Math.abs(diff) + " post(s). ");
     }
+    if (oldUser.getIs_private() != newUser.getIs_private() && isNotificationEnabled(userName, KEY_NOTIFICATION_ACCOUNT_STATUS)) {
+      sb.append("Account status has just changed to " + (newUser.getIs_private() ? "private" : "public") + "! ");
+    }
     // Remove last space
-    String s = sb.toString().substring(0, sb.toString().length() - 1);
-    Log.i(LOG_TAG, "buildUserNotificationMessage: " + s);
-    return s;
+    String message = sb.toString();
+    if (!message.isEmpty()) {
+      message = message.substring(0, message.length() - 1);
+    }
+    Log.i(LOG_TAG, "buildUserNotificationMessage: " + message);
+    return message;
+  }
+
+  private boolean isNotificationEnabled(String userName, String prefKey) {
+    if (preferences == null) {
+      return false;
+    }
+    return preferences
+        .getBoolean(String.format(preferencePattern, userName, prefKey), false);
   }
 
   private NotificationManager getNotificationManager() {

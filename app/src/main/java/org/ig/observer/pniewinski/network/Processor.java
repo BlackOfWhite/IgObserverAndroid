@@ -37,7 +37,6 @@ public class Processor {
 //      "\\{\"src\":\""); // {"src":"https://scontent-frt3-1.cdninstagram.com/vp/e3cb5179952d94b173303b5fedfe717f/5D9827B5/t51.12442-15/sh0.08/e35/p640x640/71270402_596572067543731_4247509925026537721_n.jpg?_nc_ht=scontent-frt3-1.cdninstagram.com&_nc_cat=107"
 
   public synchronized User getUser(String userName) throws UserNotFoundException, NetworkNotFound {
-    Log.i(LOG_TAG, "getUser: " + userName);
     URLConnection connection;
     Long id = null;
     Long follows = null;
