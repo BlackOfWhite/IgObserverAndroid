@@ -19,6 +19,13 @@ import org.ig.observer.pniewinski.R;
 
 public class SettingsActivity extends AppCompatPreferenceActivity {
 
+  public static final String KEY_NOTIFICATION_BIOGRAPHY = "key_notification_biography";
+  public static final String KEY_NOTIFICATION_POSTS = "key_notification_posts";
+  public static final String KEY_NOTIFICATION_PICTURE = "key_notification_picture";
+  public static final String KEY_NOTIFICATION_FOLLOWS = "key_notification_follows";
+  public static final String KEY_NOTIFICATION_FOLLOWED_BY = "key_notification_followed_by";
+  public static final String KEY_NOTIFICATION_ACCOUNT_STATUS = "key_notification_account_status";
+
   public static final String PREFERENCE_SEPARATOR = "0 |/\\| ###.:L?!'";
   public static final String SELECTED_USER_POSITION = "user_position";
   public static final String SELECTED_USER_NAME = "user_name";
@@ -130,6 +137,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
       SwitchPreference biography = setupUserSpecificSwitchPreference("key_notification_biography", preferences);
       SwitchPreference posts = setupUserSpecificSwitchPreference("key_notification_posts", preferences);
       SwitchPreference picture = setupUserSpecificSwitchPreference("key_notification_picture", preferences);
+      SwitchPreference follows = setupUserSpecificSwitchPreference("key_notification_follows", preferences);
+      SwitchPreference followedBy = setupUserSpecificSwitchPreference("key_notification_followed_by", preferences);
+      SwitchPreference status = setupUserSpecificSwitchPreference("key_notification_account_status", preferences);
     }
 
     private SwitchPreference setupUserSpecificSwitchPreference(String preferenceKey, SharedPreferences sharedPreferences) {

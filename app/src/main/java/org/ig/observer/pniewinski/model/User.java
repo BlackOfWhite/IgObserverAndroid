@@ -2,6 +2,8 @@ package org.ig.observer.pniewinski.model;
 
 import java.io.Serializable;
 import java.text.DecimalFormat;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 public class User implements Serializable {
 
@@ -122,5 +124,43 @@ public class User implements Serializable {
   public String getInfo() {
     return is_private ? "This account is private"
         : "Posts: " + getPosts() + "\nFollows: " + prettyCount(getFollows()) + "   Followed by: " + prettyCount(getFollowed_by());
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    User user = (User) o;
+
+    return new EqualsBuilder()
+        .append(getId(), user.getId())
+        .append(getName(), user.getName())
+        .append(getImg_url(), user.getImg_url())
+        .append(getPosts(), user.getPosts())
+        .append(getFollowed_by(), user.getFollowed_by())
+        .append(getFollows(), user.getFollows())
+        .append(getBiography(), user.getBiography())
+        .append(getIs_private(), user.getIs_private())
+        .isEquals();
+  }
+
+  @Override
+  public int hashCode() {
+    return new HashCodeBuilder(17, 37)
+        .append(getId())
+        .append(getName())
+        .append(getImg_url())
+        .append(getPosts())
+        .append(getFollowed_by())
+        .append(getFollows())
+        .append(getBiography())
+        .append(getIs_private())
+        .toHashCode();
   }
 }

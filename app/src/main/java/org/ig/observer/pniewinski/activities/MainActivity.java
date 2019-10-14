@@ -2,6 +2,8 @@ package org.ig.observer.pniewinski.activities;
 
 import static org.ig.observer.pniewinski.activities.SettingsActivity.SELECTED_USER_NAME;
 import static org.ig.observer.pniewinski.activities.SettingsActivity.SELECTED_USER_POSITION;
+import static org.ig.observer.pniewinski.io.FileManager.FILE_NAME;
+import static org.ig.observer.pniewinski.io.FileManager.loadUsersFromFile;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -22,10 +24,8 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.EditText;
 import android.widget.ListView;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,8 +42,7 @@ import org.ig.observer.pniewinski.service.AlarmReceiver;
 public class MainActivity extends AppCompatActivity {
 
   public static final String LOG_TAG = "IG_TAG";
-  private static final Long SERVICE_INTERVAL = 120_000L; // 2min
-  private static final String FILE_NAME = "ig_observer_storage";
+  private static final Long SERVICE_INTERVAL = 5_000L; // 2min
   private static final int MAX_OBSERVED = 10;
   private static List<User> users = new ArrayList<>();
   private ExecutorService networkExecutor = Executors.newSingleThreadExecutor();
@@ -58,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
     this.context = this;
-    this.users = loadFromFile();
+    this.users = loadUsersFromFile(context);
     this.networkProcessor = new Processor();
     adapter = new IgListAdapter(this, users);
     listView = (ListView) findViewById(R.id.list_view);
@@ -107,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
   // Setup a recurring alarm every half hour
   private void scheduleAlarm() {
     // Construct an intent that will execute the AlarmReceiver
-    Intent intent = new Intent(getApplicationContext(), AlarmReceiver.class);
+    Intent intent = new Intent(MainActivity.this, AlarmReceiver.class);
     // Create a PendingIntent to be triggered when the alarm goes off
     final PendingIntent pIntent = PendingIntent.getBroadcast(this, AlarmReceiver.REQUEST_CODE,
         intent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -121,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
   @Override
   protected void onResume() {
     super.onResume();
-//    this.users = loadFromFile();
+//    this.users = loadUsersFromFile();
   }
 
   private void showAddItemDialog() {
@@ -194,7 +193,9 @@ public class MainActivity extends AppCompatActivity {
     saveToFile(users);
   }
 
-  private void saveToFile(List<User> list) {
+
+
+  public void saveToFile(List<User> list) {
     Log.i(LOG_TAG, "saveToFile: " + list);
     fileIOExecutor.submit(new Runnable() {
       @Override
@@ -208,21 +209,6 @@ public class MainActivity extends AppCompatActivity {
         }
       }
     });
-  }
-
-  private List<User> loadFromFile() {
-    try (
-        FileInputStream fis = context.openFileInput(FILE_NAME);
-        ObjectInputStream is = new ObjectInputStream(fis)) {
-      List<User> storage = (ArrayList) is.readObject();
-      Log.i(LOG_TAG, "loadedFromFile: " + users);
-      return storage;
-    } catch (IOException | ClassNotFoundException e) {
-      Log.w(LOG_TAG, "Failed to load list from file: ", e);
-    } catch (Exception e) {
-      Log.w(LOG_TAG, "Failed to load list from file. Unexpected exception: ", e);
-    }
-    return new ArrayList<>();
   }
 
   /**

@@ -23,6 +23,18 @@
       android:defaultValue="true"
       android:key="@string/key_notification_picture"
       android:title="@string/title_notification_picture"/>
+    <SwitchPreference
+      android:defaultValue="true"
+      android:key="@string/key_notification_follows"
+      android:title="@string/title_notification_follows"/>
+    <SwitchPreference
+      android:defaultValue="true"
+      android:key="@string/key_notification_followed_by"
+      android:title="@string/title_notification_followed_by"/>
+    <SwitchPreference
+      android:defaultValue="true"
+      android:key="@string/key_notification_account_status"
+      android:title="@string/title_notification_account_status"/>
   </PreferenceCategory>
 
   <PreferenceCategory android:title="@string/pref_header_about">

@@ -45,4 +45,10 @@
   <string name="key_notification_posts">key_notification_posts</string>
   <string name="title_notification_picture">Profile picture</string>
   <string name="key_notification_picture">key_notification_picture</string>
+  <string name="title_notification_follows">Follows</string>
+  <string name="key_notification_follows">key_notification_follows</string>
+  <string name="title_notification_followed_by">Followed by</string>
+  <string name="key_notification_followed_by">key_notification_followed_by</string>
+  <string name="title_notification_account_status">Account status (private/public)</string>
+  <string name="key_notification_account_status">key_notification_account_status</string>
 </resources>
