@@ -14,6 +14,7 @@ import android.graphics.Color;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationCompat.BigTextStyle;
 import android.util.Log;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -95,6 +96,7 @@ public class IgService extends IntentService {
             .setSmallIcon(R.drawable.ic_magnifying_glass)
             .setContentTitle("Changes for user " + userName + " detected!")
             .setContentText(message)
+            .setStyle(new BigTextStyle().bigText(message))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
     PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
@@ -108,18 +110,27 @@ public class IgService extends IntentService {
     StringBuilder sb = new StringBuilder();
     if (!oldUser.getBiography().equals(newUser.getBiography())) {
       sb.append("The biography has changed. ");
-    } else if (!oldUser.getImg_url().equals(newUser.getImg_url())) {
+    }
+    if (!oldUser.getImg_url().equals(newUser.getImg_url())) {
       sb.append("There is a new profile picture. ");
-    } else if (oldUser.getFollows() != newUser.getFollows()) {
+    }
+    if ((long) oldUser.getFollows() != newUser.getFollows()) {
       Long old = oldUser.getFollows();
       Long newV = newUser.getFollows();
       long diff = newV - old;
       sb.append("User is now following " + Math.abs(diff) + " accounts " + (diff > 0 ? "more." : "less.") + " ");
-    } else if (oldUser.getFollowed_by() != newUser.getFollowed_by()) {
+    }
+    if ((long) oldUser.getFollowed_by() != newUser.getFollowed_by()) {
       Long old = oldUser.getFollowed_by();
       Long newV = newUser.getFollowed_by();
       long diff = newV - old;
-      sb.append("User has just " + (diff > 0 ? " gained " : "lost ") + Math.abs(diff) + " followers. ");
+      sb.append("User has just " + (diff > 0 ? "gained " : "lost ") + Math.abs(diff) + " followers. ");
+    }
+    if ((long) oldUser.getPosts() != newUser.getPosts()) {
+      Long old = oldUser.getPosts();
+      Long newV = newUser.getPosts();
+      long diff = newV - old;
+      sb.append("User has just " + (diff > 0 ? "added " : "removed ") + Math.abs(diff) + " post(s). ");
     }
     // Remove last space
     String s = sb.toString().substring(0, sb.toString().length() - 1);
