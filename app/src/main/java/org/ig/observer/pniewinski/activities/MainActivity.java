@@ -7,10 +7,12 @@ import static org.ig.observer.pniewinski.io.FileManager.loadUsersFromFile;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -51,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
   private IgListAdapter adapter;
   private Context context;
   private Processor networkProcessor;
+  private BroadcastReceiver broadcastReceiver; // receive events from IgService
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -100,13 +103,23 @@ public class MainActivity extends AppCompatActivity {
       }
     });
 //    clearStorage();
-    scheduleAlarm();
+    scheduleAlarmService();
+    // IgService BroadcastReceiver
+    this.broadcastReceiver = new BroadcastReceiver() {
+      @Override
+      public void onReceive(Context context, Intent intent) {
+        ArrayList<User> users = (ArrayList<User>) intent.getSerializableExtra("user_list");
+        updateUsersList(users);
+      }
+    };
+    registerReceiver(broadcastReceiver, new IntentFilter("ig_broadcast_intent"));
   }
 
+
   // Setup a recurring alarm every half hour
-  private void scheduleAlarm() {
+  private void scheduleAlarmService() {
     // Construct an intent that will execute the AlarmReceiver
-    Intent intent = new Intent(MainActivity.this, AlarmReceiver.class);
+    Intent intent = new Intent(this, AlarmReceiver.class);
     // Create a PendingIntent to be triggered when the alarm goes off
     final PendingIntent pIntent = PendingIntent.getBroadcast(this, AlarmReceiver.REQUEST_CODE,
         intent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -194,9 +207,9 @@ public class MainActivity extends AppCompatActivity {
   }
 
   /**
-   * Used only from IgService!!
+   * Used only from IgService
    */
-  public void updateUsersList(List<User> newUsers) {
+  private void updateUsersList(List<User> newUsers) {
     Log.i(LOG_TAG, "updateUsersList: " + users);
     users = newUsers;
     adapter.refreshItems(users);

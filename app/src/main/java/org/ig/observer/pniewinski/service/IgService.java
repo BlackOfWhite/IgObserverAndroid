@@ -3,6 +3,7 @@ package org.ig.observer.pniewinski.service;
 import static org.ig.observer.pniewinski.activities.MainActivity.LOG_TAG;
 import static org.ig.observer.pniewinski.activities.SettingsActivity.KEY_NOTIFICATION_ACCOUNT_STATUS;
 import static org.ig.observer.pniewinski.activities.SettingsActivity.KEY_NOTIFICATION_BIOGRAPHY;
+import static org.ig.observer.pniewinski.activities.SettingsActivity.KEY_NOTIFICATION_FOLLOWED_BY;
 import static org.ig.observer.pniewinski.activities.SettingsActivity.KEY_NOTIFICATION_FOLLOWS;
 import static org.ig.observer.pniewinski.activities.SettingsActivity.KEY_NOTIFICATION_PICTURE;
 import static org.ig.observer.pniewinski.activities.SettingsActivity.KEY_NOTIFICATION_POSTS;
@@ -32,6 +33,7 @@ import org.ig.observer.pniewinski.model.User;
 import org.ig.observer.pniewinski.network.Processor;
 
 public class IgService extends IntentService {
+
 
   private SharedPreferences preferences;
   private String preferencePattern = "%s" + PREFERENCE_SEPARATOR + "%s"; // username + PREFERENCE_SEPARATOR + key
@@ -90,7 +92,10 @@ public class IgService extends IntentService {
       return;
     }
 
-    // Update list used in main activity
+    // Update list used in main activity, send broadcast
+    Intent intent = new Intent("ig_broadcast_intent");
+    intent.putExtra("user_list", newUserList);
+    sendBroadcast(intent);
 
     // Send notifications
     final NotificationManager mNotificationManager = getNotificationManager();
@@ -131,12 +136,12 @@ public class IgService extends IntentService {
       long diff = newV - old;
       sb.append("User is now following " + Math.abs(diff) + " accounts " + (diff > 0 ? "more." : "less.") + " ");
     }
-//    if ((long) oldUser.getFollowed_by() != newUser.getFollowed_by() && isNotificationEnabled(userName, KEY_NOTIFICATION_FOLLOWED_BY)) {
-//      Long old = oldUser.getFollowed_by();
-//      Long newV = newUser.getFollowed_by();
-//      long diff = newV - old;
-//      sb.append("User has just " + (diff > 0 ? "gained " : "lost ") + Math.abs(diff) + " followers. ");
-//    }
+    if ((long) oldUser.getFollowed_by() != newUser.getFollowed_by() && isNotificationEnabled(userName, KEY_NOTIFICATION_FOLLOWED_BY)) {
+      Long old = oldUser.getFollowed_by();
+      Long newV = newUser.getFollowed_by();
+      long diff = newV - old;
+      sb.append("User has just " + (diff > 0 ? "gained " : "lost ") + Math.abs(diff) + " followers. ");
+    }
     if ((long) oldUser.getPosts() != newUser.getPosts() && isNotificationEnabled(userName, KEY_NOTIFICATION_POSTS)) {
       Long old = oldUser.getPosts();
       Long newV = newUser.getPosts();
