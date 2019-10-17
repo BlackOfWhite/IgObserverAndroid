@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
         }
       }
     });
-//    clearStorage();
+    // clearStorage();
     scheduleAlarmService();
     // IgService BroadcastReceiver
     this.broadcastReceiver = new BroadcastReceiver() {
@@ -115,6 +115,11 @@ public class MainActivity extends AppCompatActivity {
     registerReceiver(broadcastReceiver, new IntentFilter("ig_broadcast_intent"));
   }
 
+  @Override
+  public void onDestroy() {
+    super.onDestroy();
+    unregisterReceiver(broadcastReceiver);
+  }
 
   // Setup a recurring alarm every half hour
   private void scheduleAlarmService() {
@@ -210,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
    * Used only from IgService
    */
   private void updateUsersList(List<User> newUsers) {
-    Log.i(LOG_TAG, "updateUsersList: " + users);
+//    Log.i(LOG_TAG, "updateUsersList: " + users);
     users = newUsers;
     adapter.refreshItems(users);
     saveToFile(users);

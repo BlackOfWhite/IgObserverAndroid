@@ -20,6 +20,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationCompat.BigTextStyle;
 import android.util.Log;
@@ -63,6 +64,8 @@ public class IgService extends IntentService {
     for (User user : userList) {
       try {
         User newUser = processor.getUser(user.getName());
+        // force notification, test purposes
+//        newUser.setBiography(user.getBiography() + " test");
         if (!user.equals(newUser)) {
           Log.i(LOG_TAG, "User " + newUser.getName() + " has changed. Comparing with its old version.");
           newUserList.add(newUser);
@@ -99,6 +102,7 @@ public class IgService extends IntentService {
 
     // Send notifications
     final NotificationManager mNotificationManager = getNotificationManager();
+    Log.i(LOG_TAG, "Notification massages: " + userNotificationMessages);
     for (Entry<User, String> entry : userNotificationMessages.entrySet()) {
       NotificationCompat.Builder notificationBuilder = buildNotification(entry.getKey().getName(), entry.getValue());
       mNotificationManager.notify(entry.getKey().getId().intValue(), notificationBuilder.build());
@@ -117,6 +121,8 @@ public class IgService extends IntentService {
     PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
         new Intent(this, MainActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
     mBuilder.setContentIntent(contentIntent);
+    mBuilder.setVibrate(new long[]{1000, 1000, 1000, 1000, 1000});
+    mBuilder.setSound(Settings.System.DEFAULT_NOTIFICATION_URI);
     mBuilder.setAutoCancel(true);
     return mBuilder;
   }
@@ -165,7 +171,7 @@ public class IgService extends IntentService {
       return false;
     }
     return preferences
-        .getBoolean(String.format(preferencePattern, userName, prefKey), false);
+        .getBoolean(String.format(preferencePattern, userName, prefKey), true);
   }
 
   private NotificationManager getNotificationManager() {
