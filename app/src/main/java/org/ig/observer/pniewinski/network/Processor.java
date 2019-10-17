@@ -89,7 +89,11 @@ public class Processor {
     } catch (IOException e) {
       throw new UserNotFoundException(userName);
     }
-    return new User(id, userName, img_url, post_count, follows, followed_by, biography, is_private);
+    if (id != null) {
+      return new User(id, userName, img_url, post_count, follows, followed_by, biography, is_private);
+    } else {
+      throw new UserNotFoundException(userName);
+    }
   }
 //  public void getUserImageUrls(String userName) {
 //    Set<String> urls = getContent(String.format(USER_FEED_URL, userName), PROFILE_IMG_URL_PATTERN);
