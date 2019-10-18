@@ -24,7 +24,6 @@ import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationCompat.BigTextStyle;
 import android.util.Log;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +50,7 @@ public class IgService extends IntentService {
     Log.i(LOG_TAG, "Starting IgService service run");
     preferences = PreferenceManager.getDefaultSharedPreferences(this);
     Log.i(LOG_TAG, "allPreferences: " + preferences.getAll());
-    CopyOnWriteArrayList<User> users = (CopyOnWriteArrayList<User>) loadUsersFromFile(getApplicationContext());
+    CopyOnWriteArrayList<User> users = loadUsersFromFile(getApplicationContext());
     Log.i(LOG_TAG, "onHandleIntent::userList: " + users);
     if (users != null && !users.isEmpty()) {
       processUsers(users);
@@ -60,7 +59,7 @@ public class IgService extends IntentService {
 
   private void processUsers(List<User> userList) {
     Processor processor = new Processor();
-    ArrayList<User> newUserList = new ArrayList<>();
+    CopyOnWriteArrayList<User> newUserList = new CopyOnWriteArrayList<>();
     Map<User, String> userNotificationMessages = new HashMap<>();
     // Get notification settings
     for (User user : userList) {

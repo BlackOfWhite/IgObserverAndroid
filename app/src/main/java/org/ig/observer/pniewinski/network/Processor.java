@@ -21,7 +21,7 @@ import org.ig.observer.pniewinski.model.User;
 
 public class Processor {
 
-  private static final String USER_FEED_URL = "https://www.instagram.com/%s/";
+  private static final String USER_FEED_URL = "https://www.instagram.com/%s/"; // https://www.instagram.com/xd/?__a=1
   private static final Pattern USER_ID_PATTERN = Pattern.compile("\"id\":\"(\\d+)\",\\\"is_busi"); // "id":"(\d+)","is_buss
   private static final Pattern FOLLOWS_PATTERN = Pattern.compile("\"edge_follow\":\\{\"count\":(\\d+)\\}"); // "edge_follow":{"count":3626}
   private static final Pattern FOLLOWED_BY_PATTERN = Pattern
@@ -48,11 +48,12 @@ public class Processor {
         throw new ConnectionError();
       }
       sslConnection.setInstanceFollowRedirects(false);
-      sslConnection.connect();
       int responseCode = sslConnection.getResponseCode();
       if (responseCode >= 400) {
         Log.i(LOG_TAG, "Got invalid response code: " + responseCode + ", response message: " + sslConnection.getResponseMessage());
         throw new ConnectionError();
+      } else {
+        Log.i(LOG_TAG, "Response code: " + responseCode);
       }
       String img_url = null;
       try (BufferedReader br =
@@ -60,7 +61,7 @@ public class Processor {
               new InputStreamReader(sslConnection.getInputStream()))) {
         String next;
         while ((next = br.readLine()) != null) {
-//          Log.i(LOG_TAG, next);
+          Log.i(LOG_TAG, "RL: " + next);
           if (next.contains("<script type=\"text/javascript\">window._sharedData = {\"config\":{\"csrf_token\"")) {
 //            Log.i(LOG_TAG, "User data line was found: " + next);
             Long id = parseLong(getMatch(next, USER_ID_PATTERN), "\"", 3, 10);

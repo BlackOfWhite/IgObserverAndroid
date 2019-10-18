@@ -22,6 +22,14 @@
     android:focusable="true">
   </ListView>
 
+  <Button
+    android:id="@+id/btn_login"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:onClick="onLoginClick"
+    android:layout_centerHorizontal="true"
+    android:text="INSTAGRAM LOGIN" />
+
   <android.support.design.widget.FloatingActionButton
     android:id="@+id/fab_add_new"
     android:layout_width="wrap_content"

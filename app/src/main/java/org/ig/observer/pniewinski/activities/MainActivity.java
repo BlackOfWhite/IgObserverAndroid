@@ -36,6 +36,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.ig.observer.pniewinski.IgListAdapter;
 import org.ig.observer.pniewinski.R;
+import org.ig.observer.pniewinski.auth.AuthenticationDialog;
 import org.ig.observer.pniewinski.exceptions.NetworkNotFound;
 import org.ig.observer.pniewinski.exceptions.UserNotFoundException;
 import org.ig.observer.pniewinski.model.User;
@@ -108,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
     this.broadcastReceiver = new BroadcastReceiver() {
       @Override
       public void onReceive(Context context, Intent intent) {
-        ArrayList<User> users = (ArrayList<User>) intent.getSerializableExtra("user_list");
+        CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<>((ArrayList<User>) intent.getSerializableExtra("user_list"));
         updateUsersList(users);
       }
     };
@@ -243,6 +244,12 @@ public class MainActivity extends AppCompatActivity {
    * Only development purposes.
    */
   private void clearStorage() {
-    saveToFile(new ArrayList<>());
+    saveToFile(new CopyOnWriteArrayList<>());
+  }
+
+  public void onLoginClick(View view) {
+//    authenticationDialog = new AuthenticationDialog(this, this);
+//    authenticationDialog.setCancelable(true);
+//    authenticationDialog.show();
   }
 }
