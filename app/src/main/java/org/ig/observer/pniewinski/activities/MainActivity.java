@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.ig.observer.pniewinski.IgListAdapter;
@@ -46,7 +47,6 @@ public class MainActivity extends AppCompatActivity {
   public static final String LOG_TAG = "IG_TAG";
   private static final Long SERVICE_INTERVAL = 5 * 60_000L; // 5min
   private static final int MAX_OBSERVED = 10;
-  private static List<User> users = new ArrayList<>();
   private ExecutorService networkExecutor = Executors.newSingleThreadExecutor();
   private ExecutorService fileIOExecutor = Executors.newSingleThreadExecutor();
   private ListView listView;
@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
     this.context = this;
-    this.users = loadUsersFromFile(context);
+    CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<>(loadUsersFromFile(context));
     this.networkProcessor = new Processor();
     adapter = new IgListAdapter(this, users);
     listView = (ListView) findViewById(R.id.list_view);
@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
         }
       }
     });
-    // clearStorage();
+//     clearStorage();
     scheduleAlarmService();
     // IgService BroadcastReceiver
     this.broadcastReceiver = new BroadcastReceiver() {
@@ -165,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private boolean isUserPresent(String userName) {
-    for (User user : users) {
+    for (User user : adapter.getUserList()) {
       if (user.getName().equalsIgnoreCase(userName)) {
         return true;
       }
@@ -183,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
           snackbar(listView, "You are now observing user: " + userName);
         } catch (UserNotFoundException e) {
           snackbar(listView, "User " + userName + " was not found");
-        } catch (NetworkNotFound networkNotFound) {
+        } catch (NetworkNotFound e) {
           snackbar(listView, "No internet connection");
         }
       }
@@ -199,16 +199,18 @@ public class MainActivity extends AppCompatActivity {
    * Use from within adapter.
    */
   public void removeUserFromList(int position) {
-    users.remove(position);
-    adapter.refreshItems(users);
-    saveToFile(users);
+    List<User> list = new CopyOnWriteArrayList<>(adapter.getUserList());
+    list.remove(position);
+    adapter.refreshItems(list);
+    saveToFile(list);
   }
 
   public void addUserToList(User user) {
     Log.i(LOG_TAG, "addUserToList: " + user);
-    users.add(user);
-    adapter.refreshItems(users, users.size() == 1);
-    saveToFile(users);
+    List<User> list = new CopyOnWriteArrayList<>(adapter.getUserList());
+    list.add(user);
+    adapter.refreshItems(list, list.size() == 1);
+    saveToFile(list);
   }
 
   /**
@@ -216,9 +218,8 @@ public class MainActivity extends AppCompatActivity {
    */
   private void updateUsersList(List<User> newUsers) {
 //    Log.i(LOG_TAG, "updateUsersList: " + users);
-    users = newUsers;
-    adapter.refreshItems(users);
-    saveToFile(users);
+    adapter.refreshItems(newUsers);
+    saveToFile(newUsers);
   }
 
 

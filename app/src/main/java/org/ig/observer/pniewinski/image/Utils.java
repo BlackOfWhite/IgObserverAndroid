@@ -15,7 +15,11 @@ public class Utils {
   public static void saveBitmap(Context context, Bitmap b, String picName) {
     try {
       FileOutputStream fos = context.openFileOutput(picName, Context.MODE_PRIVATE);
-      b.compress(Bitmap.CompressFormat.PNG, 100, fos);
+      if (b != null) {
+        b.compress(Bitmap.CompressFormat.PNG, 100, fos);
+      } else {
+        Log.w(LOG_TAG, "Bitmap for picture: " + picName + " was null!");
+      }
     } catch (FileNotFoundException e) {
       Log.w(LOG_TAG, "File " + picName + " not found.", e);
     }

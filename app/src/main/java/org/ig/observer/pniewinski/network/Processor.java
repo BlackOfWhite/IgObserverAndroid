@@ -7,19 +7,21 @@ import static org.ig.observer.pniewinski.network.util.ResponseParser.parseLong;
 import static org.ig.observer.pniewinski.network.util.ResponseParser.parseString;
 
 import android.util.Log;
-import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.UnknownHostException;
-import java.util.Scanner;
 import java.util.regex.Pattern;
+import javax.net.ssl.HttpsURLConnection;
+import org.ig.observer.pniewinski.exceptions.ConnectionError;
 import org.ig.observer.pniewinski.exceptions.NetworkNotFound;
 import org.ig.observer.pniewinski.exceptions.UserNotFoundException;
 import org.ig.observer.pniewinski.model.User;
 
 public class Processor {
 
-  private static final String USER_FEED_URL = "https://www.instagram.com/%s";
+  private static final String USER_FEED_URL = "https://www.instagram.com/%s/";
   private static final Pattern USER_ID_PATTERN = Pattern.compile("\"id\":\"(\\d+)\",\\\"is_busi"); // "id":"(\d+)","is_buss
   private static final Pattern FOLLOWS_PATTERN = Pattern.compile("\"edge_follow\":\\{\"count\":(\\d+)\\}"); // "edge_follow":{"count":3626}
   private static final Pattern FOLLOWED_BY_PATTERN = Pattern
@@ -36,17 +38,48 @@ public class Processor {
 //  private static final Pattern USER_STORY_PATTERN = Pattern.compile(
 //      "\\{\"src\":\""); // {"src":"https://scontent-frt3-1.cdninstagram.com/vp/e3cb5179952d94b173303b5fedfe717f/5D9827B5/t51.12442-15/sh0.08/e35/p640x640/71270402_596572067543731_4247509925026537721_n.jpg?_nc_ht=scontent-frt3-1.cdninstagram.com&_nc_cat=107"
 
-  public synchronized User getUser(String userName) throws UserNotFoundException, NetworkNotFound {
-    URLConnection connection;
-    Long id = null;
-    Long follows = null;
-    Long followed_by = null;
-    String biography = null;
-    Long post_count = null;
-    Boolean is_private = null;
-    String img_url = null;
+  public User getUser(String userName) throws UserNotFoundException, NetworkNotFound {
+    HttpsURLConnection sslConnection;
     try {
-      connection = new URL(String.format(USER_FEED_URL, userName)).openConnection();
+      URLConnection urlConnection = new URL(String.format(USER_FEED_URL, userName)).openConnection();
+      sslConnection = (HttpsURLConnection) urlConnection;
+      if (sslConnection == null) {
+        Log.i(LOG_TAG, "Failed to open HTTPS connection.");
+        throw new ConnectionError();
+      }
+      sslConnection.setInstanceFollowRedirects(false);
+      sslConnection.connect();
+      int responseCode = sslConnection.getResponseCode();
+      if (responseCode >= 400) {
+        Log.i(LOG_TAG, "Got invalid response code: " + responseCode + ", response message: " + sslConnection.getResponseMessage());
+        throw new ConnectionError();
+      }
+      String img_url = null;
+      try (BufferedReader br =
+          new BufferedReader(
+              new InputStreamReader(sslConnection.getInputStream()))) {
+        String next;
+        while ((next = br.readLine()) != null) {
+//          Log.i(LOG_TAG, next);
+          if (next.contains("<script type=\"text/javascript\">window._sharedData = {\"config\":{\"csrf_token\"")) {
+//            Log.i(LOG_TAG, "User data line was found: " + next);
+            Long id = parseLong(getMatch(next, USER_ID_PATTERN), "\"", 3, 10);
+            Long follows = parseLong(getMatch(next, FOLLOWS_PATTERN), ":", 2);
+            Long followed_by = parseLong(getMatch(next, FOLLOWED_BY_PATTERN), ":", 2);
+            String biography = parseString(getMatch(next, USER_BIOGRAPHY_PATTERN), "\"", 3, 0);
+            Long post_count = parseLong(getMatch(next, USER_POSTS_COUNT_PATTERN), ":", 2);
+            Boolean is_private = parseBoolean(getMatch(next, IS_PRIVATE_PATTERN), ":", 1);
+            if (id != null) {
+              return new User(id, userName, img_url, post_count, follows, followed_by, biography, is_private);
+            } else {
+              throw new UserNotFoundException(userName);
+            }
+          } else if (img_url == null) {
+            // this  should be matched before statement above
+            img_url = parseString(getMatch(next, PROFILE_IMG_URL_PATTERN), "\"", 3, 0);
+          }
+        }
+      }
     } catch (UnknownHostException e) {
       Log.w(LOG_TAG, "getUser: " + userName, e);
       throw new NetworkNotFound();
@@ -54,91 +87,7 @@ public class Processor {
       Log.w(LOG_TAG, "getUser: " + userName, e);
       throw new UserNotFoundException(userName);
     }
-    try (Scanner scanner = new Scanner(connection.getInputStream())) {
-      scanner.useDelimiter("\\Z");
-      while (scanner.hasNext()) {
-        String next = scanner.next();
-        if (id == null) {
-          id = parseLong(getMatch(next, USER_ID_PATTERN), "\"", 3, 10);
-        }
-        if (follows == null) {
-          follows = parseLong(getMatch(next, FOLLOWS_PATTERN), ":", 2);
-        }
-        if (followed_by == null) {
-          followed_by = parseLong(getMatch(next, FOLLOWED_BY_PATTERN), ":", 2);
-        }
-        if (biography == null) {
-          biography = parseString(getMatch(next, USER_BIOGRAPHY_PATTERN), "\"", 3, 0);
-        }
-        if (post_count == null) {
-          post_count = parseLong(getMatch(next, USER_POSTS_COUNT_PATTERN), ":", 2);
-        }
-        if (is_private == null) {
-          is_private = parseBoolean(getMatch(next, IS_PRIVATE_PATTERN), ":", 1);
-        }
-        if (img_url == null) {
-          img_url = parseString(getMatch(next, PROFILE_IMG_URL_PATTERN), "\"", 3, 0);
-        }
-        if (id != null && follows != null && followed_by != null && biography != null && post_count != null && is_private != null
-            && img_url != null) {
-          break;
-        }
-      }
-    } catch (UnknownHostException e) {
-      throw new NetworkNotFound();
-    } catch (IOException e) {
-      throw new UserNotFoundException(userName);
-    }
-    if (id != null) {
-      return new User(id, userName, img_url, post_count, follows, followed_by, biography, is_private);
-    } else {
-      throw new UserNotFoundException(userName);
-    }
+    Log.w(LOG_TAG, "getUser: " + userName + ", no patterns found in response");
+    throw new UserNotFoundException(userName);
   }
-//  public void getUserImageUrls(String userName) {
-//    Set<String> urls = getContent(String.format(USER_FEED_URL, userName), PROFILE_IMG_URL_PATTERN);
-//    for (String url : urls) {
-//      int start = ordinalIndexOf(url, "\"", 3);
-//      try {
-//        String result = url.substring(start + 1, url.length() - 1);
-//        if (result.contains("480x480")) {
-//          String previous = LAST_IMG_CACHE.get(userName);
-//          if (previous == null) {
-//            LAST_IMG_CACHE.put(userName, result);
-//          } else if (!previous.equals(result)) {
-//            // send email notification here
-//            LAST_IMG_CACHE.put(userName, result);
-//          }
-//          return;
-//        }
-//      } catch (Exception e) {
-//        continue;
-//      }
-//    }
-//  }
-//
-//  private Set<String> getContent(String url, Pattern pattern) {
-//    Set<String> found = new LinkedHashSet<>();
-//    URLConnection connection;
-//    try {
-//      connection = new URL(url).openConnection();
-//      Log.i(LOG_TAG, "getContent: " + url);
-//      try (Scanner scanner = new Scanner(connection.getInputStream())) {
-//        scanner.useDelimiter("\\Z");
-//        while (scanner.hasNext()) {
-//          String next = scanner.next();
-//          System.out.println(next);
-//          Matcher matcher = pattern.matcher(next);
-//          while (matcher.find()) {
-//            found.add(matcher.group());
-//          }
-//        }
-//      }
-//    } catch (MalformedURLException e) {
-//      e.printStackTrace();
-//    } catch (IOException e) {
-//      e.printStackTrace();
-//    }
-//    return found;
-//  }
 }

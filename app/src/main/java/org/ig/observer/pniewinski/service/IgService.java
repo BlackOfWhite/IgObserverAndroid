@@ -26,8 +26,10 @@ import android.support.v4.app.NotificationCompat.BigTextStyle;
 import android.util.Log;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.CopyOnWriteArrayList;
 import org.ig.observer.pniewinski.R;
 import org.ig.observer.pniewinski.activities.MainActivity;
 import org.ig.observer.pniewinski.model.User;
@@ -49,14 +51,14 @@ public class IgService extends IntentService {
     Log.i(LOG_TAG, "Starting IgService service run");
     preferences = PreferenceManager.getDefaultSharedPreferences(this);
     Log.i(LOG_TAG, "allPreferences: " + preferences.getAll());
-    ArrayList<User> users = (ArrayList<User>) loadUsersFromFile(getApplicationContext());
+    CopyOnWriteArrayList<User> users = (CopyOnWriteArrayList<User>) loadUsersFromFile(getApplicationContext());
     Log.i(LOG_TAG, "onHandleIntent::userList: " + users);
     if (users != null && !users.isEmpty()) {
       processUsers(users);
     }
   }
 
-  private void processUsers(ArrayList<User> userList) {
+  private void processUsers(List<User> userList) {
     Processor processor = new Processor();
     ArrayList<User> newUserList = new ArrayList<>();
     Map<User, String> userNotificationMessages = new HashMap<>();

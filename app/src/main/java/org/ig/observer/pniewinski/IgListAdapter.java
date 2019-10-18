@@ -22,6 +22,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.commons.text.StringEscapeUtils;
 import org.ig.observer.pniewinski.activities.MainActivity;
 import org.ig.observer.pniewinski.image.DownloadImageTask;
@@ -34,9 +35,9 @@ public class IgListAdapter extends ArrayAdapter {
       + "&#8226; Click and hold to enter notification settings."));
   private static final StyleSpan BOLD_STYLE = new StyleSpan(android.graphics.Typeface.BOLD);
   private final MainActivity mainActivity;
-  private List<User> users;
+  private CopyOnWriteArrayList<User> users;
 
-  public IgListAdapter(MainActivity mainActivity, List<User> list) {
+  public IgListAdapter(MainActivity mainActivity, CopyOnWriteArrayList<User> list) {
     super(mainActivity, R.layout.listview_row, list);
     this.mainActivity = mainActivity;
     this.users = list;
@@ -85,8 +86,9 @@ public class IgListAdapter extends ArrayAdapter {
     refreshItems(list, false);
   }
 
-  public void refreshItems(List<User> list, boolean showDialog) {
-    users = list;
+  public void refreshItems(final List<User> list, boolean showDialog) {
+    users.clear();
+    users.addAll(list);
     Handler handler = new Handler(Looper.getMainLooper());
     handler.post(new Runnable() {
       public void run() {
@@ -114,5 +116,9 @@ public class IgListAdapter extends ArrayAdapter {
       Log.w(LOG_TAG, "getFormattedText: Failed to beautify text.", e);
       return text;
     }
+  }
+
+  public List<User> getUserList() {
+    return users;
   }
 }

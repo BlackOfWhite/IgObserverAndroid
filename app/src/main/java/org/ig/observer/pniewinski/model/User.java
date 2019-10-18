@@ -7,8 +7,8 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 public class User implements Serializable {
 
-  private final Long id;
-  private final String name;
+  private Long id;
+  private String name;
   private String img_url;
   private Long posts;
   private Long followed_by;
