@@ -61,7 +61,7 @@ public class Processor {
               new InputStreamReader(sslConnection.getInputStream()))) {
         String next;
         while ((next = br.readLine()) != null) {
-          Log.i(LOG_TAG, "RL: " + next);
+//          Log.i(LOG_TAG, "RL: " + next);
           if (next.contains("<script type=\"text/javascript\">window._sharedData = {\"config\":{\"csrf_token\"")) {
 //            Log.i(LOG_TAG, "User data line was found: " + next);
             Long id = parseLong(getMatch(next, USER_ID_PATTERN), "\"", 3, 10);

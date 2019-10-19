@@ -20,6 +20,8 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AlertDialog.Builder;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -36,7 +38,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.ig.observer.pniewinski.IgListAdapter;
 import org.ig.observer.pniewinski.R;
-import org.ig.observer.pniewinski.auth.AuthenticationDialog;
 import org.ig.observer.pniewinski.exceptions.NetworkNotFound;
 import org.ig.observer.pniewinski.exceptions.UserNotFoundException;
 import org.ig.observer.pniewinski.model.User;
@@ -56,11 +57,29 @@ public class MainActivity extends AppCompatActivity {
   private Processor networkProcessor;
   private BroadcastReceiver broadcastReceiver; // receive events from IgService
 
+  // create an action bar button
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    getMenuInflater().inflate(R.menu.toolbar_menu, menu);
+    return super.onCreateOptionsMenu(menu);
+  }
+
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    int id = item.getItemId();
+    if (id == R.id.button_login) {
+      Log.i(LOG_TAG, "Login");
+    }
+    return super.onOptionsItemSelected(item);
+  }
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
     this.context = this;
+    // Adapter
     CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<>(loadUsersFromFile(context));
     this.networkProcessor = new Processor();
     adapter = new IgListAdapter(this, users);
@@ -245,11 +264,5 @@ public class MainActivity extends AppCompatActivity {
    */
   private void clearStorage() {
     saveToFile(new CopyOnWriteArrayList<>());
-  }
-
-  public void onLoginClick(View view) {
-//    authenticationDialog = new AuthenticationDialog(this, this);
-//    authenticationDialog.setCancelable(true);
-//    authenticationDialog.show();
   }
 }

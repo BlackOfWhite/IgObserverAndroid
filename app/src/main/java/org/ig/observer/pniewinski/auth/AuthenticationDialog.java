@@ -17,4 +17,6 @@ public class AuthenticationDialog extends Dialog {
     super.onCreate(savedInstanceState);
 //    this.setContentView(R.layout.auth_dialog);
   }
+
+
 }

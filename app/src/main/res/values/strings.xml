@@ -1,5 +1,7 @@
 <resources>
   <string name="app_name">Ig Observer</string>
+  <string name="app_log_in">Log in</string>
+  <string name="app_log_out">Log out</string>
 
   <!-- Instagram API -->
   <string name="client_id">your_client_id</string>
