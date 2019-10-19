@@ -4,9 +4,10 @@
   <string name="app_log_out">Log out</string>
 
   <!-- Instagram API -->
-  <string name="client_id">your_client_id</string>
+  <string name="client_id">9a02a8eec2f942dfa3a62661fbc1cac3</string>
   <string name="callback_url">https://instagram.com/</string>
   <string name="base_url">https://api.instagram.com/</string>
+  <string name="redirect_url">https://www.instagram.com</string>
 
   <!-- Settings -->
   <string name="s_story">Viewing Instagram stories requires user to be signed in, therefore if you want to access this feature we suggest you to use built-in login functionality.

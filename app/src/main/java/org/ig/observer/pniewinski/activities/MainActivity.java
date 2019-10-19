@@ -2,7 +2,9 @@ package org.ig.observer.pniewinski.activities;
 
 import static org.ig.observer.pniewinski.activities.SettingsActivity.SELECTED_USER_NAME;
 import static org.ig.observer.pniewinski.activities.SettingsActivity.SELECTED_USER_POSITION;
-import static org.ig.observer.pniewinski.io.FileManager.FILE_NAME;
+import static org.ig.observer.pniewinski.io.FileManager.FILE_NAME_USERS;
+import static org.ig.observer.pniewinski.io.FileManager.FILE_NAME_USER_OWN;
+import static org.ig.observer.pniewinski.io.FileManager.loadUserOwnFromFile;
 import static org.ig.observer.pniewinski.io.FileManager.loadUsersFromFile;
 
 import android.app.AlarmManager;
@@ -38,13 +40,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.ig.observer.pniewinski.IgListAdapter;
 import org.ig.observer.pniewinski.R;
+import org.ig.observer.pniewinski.auth.AuthenticationDialog;
+import org.ig.observer.pniewinski.auth.AuthenticationListener;
 import org.ig.observer.pniewinski.exceptions.NetworkNotFound;
 import org.ig.observer.pniewinski.exceptions.UserNotFoundException;
 import org.ig.observer.pniewinski.model.User;
+import org.ig.observer.pniewinski.model.own.UserOwn;
 import org.ig.observer.pniewinski.network.Processor;
 import org.ig.observer.pniewinski.service.AlarmReceiver;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AuthenticationListener {
 
   public static final String LOG_TAG = "IG_TAG";
   private static final Long SERVICE_INTERVAL = 5 * 60_000L; // 5min
@@ -56,11 +61,24 @@ public class MainActivity extends AppCompatActivity {
   private Context context;
   private Processor networkProcessor;
   private BroadcastReceiver broadcastReceiver; // receive events from IgService
+  private volatile UserOwn userOwn;
+  private MenuItem menuLoginItem;
+  private boolean isFirstRun = true;
 
-  // create an action bar button
+  // Create an action bar button
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
     getMenuInflater().inflate(R.menu.toolbar_menu, menu);
+    menuLoginItem = menu.findItem(R.id.button_login);
+    if (isFirstRun) {
+      if (isUserSignedIn()) {
+        menuLoginItem.setTitle(R.string.app_log_out);
+        getSupportActionBar().setTitle(userOwn.getData().getUsername());
+      } else {
+        menuLoginItem.setTitle(R.string.app_log_in);
+      }
+      isFirstRun = false;
+    }
     return super.onCreateOptionsMenu(menu);
   }
 
@@ -69,10 +87,39 @@ public class MainActivity extends AppCompatActivity {
   public boolean onOptionsItemSelected(MenuItem item) {
     int id = item.getItemId();
     if (id == R.id.button_login) {
-      Log.i(LOG_TAG, "Login");
+      Log.i(LOG_TAG, "Login clicked");
+      if (isUserSignedIn()) {
+        signOutUser();
+      } else {
+        signInUser();
+      }
     }
     return super.onOptionsItemSelected(item);
   }
+
+
+  private boolean isAccessTokenValid() {
+    return userOwn != null && userOwn.getAccessToken() != null && !userOwn.getAccessToken().isEmpty();
+  }
+
+  private synchronized void signInUser() {
+    AuthenticationDialog authenticationDialog = new AuthenticationDialog(this, this);
+    authenticationDialog.show();
+  }
+
+  private void signOutUser() {
+    userOwn = null;
+    saveUserOwnToFile(null);
+    if (menuLoginItem != null) {
+      runOnUiThread(() -> {
+        menuLoginItem.setTitle(R.string.app_log_in);
+        getSupportActionBar().setTitle(R.string.app_name);
+      });
+    } else {
+      Log.w(LOG_TAG, "Menu login item is NULL!");
+    }
+  }
+
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
     setContentView(R.layout.activity_main);
     this.context = this;
     // Adapter
+    userOwn = loadUserOwnFromFile(context);
     CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<>(loadUsersFromFile(context));
     this.networkProcessor = new Processor();
     adapter = new IgListAdapter(this, users);
@@ -162,6 +210,10 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void showAddItemDialog() {
+    if (!isUserSignedIn()) {
+      snackbar(listView, "You must be logged in to start observing accounts");
+      return;
+    }
     final EditText taskEditText = new EditText(this);
     AlertDialog dialog = new Builder(this, R.style.AlertDialogStyle)
         .setTitle("Observe new user")
@@ -198,7 +250,7 @@ public class MainActivity extends AppCompatActivity {
       @Override
       public void run() {
         try {
-          User user = networkProcessor.getUser(userName);
+          User user = networkProcessor.getUser(userName, userOwn.getAccessToken());
           addUserToList(user);
           snackbar(listView, "You are now observing user: " + userName);
         } catch (UserNotFoundException e) {
@@ -208,6 +260,10 @@ public class MainActivity extends AppCompatActivity {
         }
       }
     });
+  }
+
+  public boolean isUserSignedIn() {
+    return isAccessTokenValid();
   }
 
   private void snackbar(View view, String message) {
@@ -249,9 +305,24 @@ public class MainActivity extends AppCompatActivity {
       @Override
       public void run() {
         try (
-            FileOutputStream fos = context.openFileOutput(FILE_NAME, Context.MODE_PRIVATE);
+            FileOutputStream fos = context.openFileOutput(FILE_NAME_USERS, Context.MODE_PRIVATE);
             ObjectOutputStream os = new ObjectOutputStream(fos)) {
           os.writeObject(list);
+        } catch (IOException e) {
+          Log.w(LOG_TAG, "Failed to save list to file: ", e);
+        }
+      }
+    });
+  }
+
+  private void saveUserOwnToFile(UserOwn userOwn) {
+    fileIOExecutor.submit(new Runnable() {
+      @Override
+      public void run() {
+        try (
+            FileOutputStream fos = context.openFileOutput(FILE_NAME_USER_OWN, Context.MODE_PRIVATE);
+            ObjectOutputStream os = new ObjectOutputStream(fos)) {
+          os.writeObject(userOwn);
         } catch (IOException e) {
           Log.w(LOG_TAG, "Failed to save list to file: ", e);
         }
@@ -264,5 +335,41 @@ public class MainActivity extends AppCompatActivity {
    */
   private void clearStorage() {
     saveToFile(new CopyOnWriteArrayList<>());
+  }
+
+  @Override
+  public void onTokenReceived(String auth_token) {
+    Log.i(LOG_TAG, "Token received: " + auth_token);
+    if (menuLoginItem != null) {
+      setUpOwnUser(auth_token);
+    } else {
+      Log.w(LOG_TAG, "Menu login item is NULL!");
+    }
+  }
+
+  @Override
+  public void onSignOut() {
+    signOutUser();
+  }
+
+  private void setUpOwnUser(String accessToken) {
+    networkExecutor.submit(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          userOwn = networkProcessor.getOwn(accessToken);
+          userOwn.setAccessToken(accessToken);
+          saveUserOwnToFile(userOwn);
+          runOnUiThread(() -> {
+            menuLoginItem.setTitle(R.string.app_log_out);
+            getSupportActionBar().setTitle(userOwn.getData().getUsername());
+            snackbar(listView, "Welcome " + userOwn.getData().getUsername());
+          });
+        } catch (IOException e) {
+          Log.w(LOG_TAG, "Unexpected exception while fetching user own data: ", e);
+          return;
+        }
+      }
+    });
   }
 }

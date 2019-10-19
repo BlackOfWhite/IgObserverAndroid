@@ -1,7 +1,8 @@
 package org.ig.observer.pniewinski.auth;
 
-public class AuthenticationListener {
+public interface AuthenticationListener {
 
+  void onTokenReceived(String auth_token);
 
-
+  void onSignOut();
 }

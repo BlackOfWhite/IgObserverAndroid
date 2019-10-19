@@ -64,7 +64,8 @@ public class IgService extends IntentService {
     // Get notification settings
     for (User user : userList) {
       try {
-        User newUser = processor.getUser(user.getName());
+//        User newUser = processor.getUser(user.getName());
+        User newUser = null;
         // force notification, test purposes
 //        newUser.setBiography(user.getBiography() + " test");
         if (!user.equals(newUser)) {

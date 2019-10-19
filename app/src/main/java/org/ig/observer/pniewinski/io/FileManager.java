@@ -10,14 +10,16 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.ig.observer.pniewinski.model.User;
+import org.ig.observer.pniewinski.model.own.UserOwn;
 
 public class FileManager {
 
-  public static final String FILE_NAME = "ig_observer_storage";
+  public static final String FILE_NAME_USERS = "ig_observer_storage";
+  public static final String FILE_NAME_USER_OWN = "ig_observer_storage_user_own";
 
   public static CopyOnWriteArrayList<User> loadUsersFromFile(Context context) {
     try (
-        FileInputStream fis = context.openFileInput(FILE_NAME);
+        FileInputStream fis = context.openFileInput(FILE_NAME_USERS);
         ObjectInputStream is = new ObjectInputStream(fis)) {
       CopyOnWriteArrayList<User> users = (CopyOnWriteArrayList) is.readObject();
       Log.i(LOG_TAG, "loadedFromFile: " + users);
@@ -30,6 +32,23 @@ public class FileManager {
       Log.w(LOG_TAG, "Failed to load list from file. Unexpected exception: ", e);
     }
     return new CopyOnWriteArrayList<>();
+  }
+
+  public static UserOwn loadUserOwnFromFile(Context context) {
+    try (
+        FileInputStream fis = context.openFileInput(FILE_NAME_USER_OWN);
+        ObjectInputStream is = new ObjectInputStream(fis)) {
+      UserOwn userOwn = (UserOwn) is.readObject();
+      Log.i(LOG_TAG, "loadedTokenFromFile: " + userOwn);
+      return userOwn;
+    } catch (FileNotFoundException e) {
+      Log.w(LOG_TAG, "Failed to find file: ", e);
+    } catch (IOException | ClassNotFoundException e) {
+      Log.w(LOG_TAG, "Failed to load list from file: ", e);
+    } catch (Exception e) {
+      Log.w(LOG_TAG, "Failed to load list from file. Unexpected exception: ", e);
+    }
+    return null;
   }
 
 }
