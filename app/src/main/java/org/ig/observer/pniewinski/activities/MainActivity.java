@@ -1,11 +1,14 @@
 package org.ig.observer.pniewinski.activities;
 
+import static org.ig.observer.pniewinski.SnackbarUtils.networkNotFoundSnackbar;
+import static org.ig.observer.pniewinski.SnackbarUtils.snackbar;
 import static org.ig.observer.pniewinski.activities.SettingsActivity.SELECTED_USER_NAME;
 import static org.ig.observer.pniewinski.activities.SettingsActivity.SELECTED_USER_POSITION;
+import static org.ig.observer.pniewinski.io.FileManager.FILE_NAME_AUTH;
 import static org.ig.observer.pniewinski.io.FileManager.FILE_NAME_USERS;
-import static org.ig.observer.pniewinski.io.FileManager.FILE_NAME_USER_OWN;
-import static org.ig.observer.pniewinski.io.FileManager.loadUserOwnFromFile;
+import static org.ig.observer.pniewinski.io.FileManager.loadAuthFromFile;
 import static org.ig.observer.pniewinski.io.FileManager.loadUsersFromFile;
+import static org.ig.observer.pniewinski.network.Processor.clearCookies;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -17,7 +20,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AlertDialog.Builder;
 import android.support.v7.app.AppCompatActivity;
@@ -44,8 +46,8 @@ import org.ig.observer.pniewinski.auth.AuthenticationDialog;
 import org.ig.observer.pniewinski.auth.AuthenticationListener;
 import org.ig.observer.pniewinski.exceptions.NetworkNotFound;
 import org.ig.observer.pniewinski.exceptions.UserNotFoundException;
+import org.ig.observer.pniewinski.model.Auth;
 import org.ig.observer.pniewinski.model.User;
-import org.ig.observer.pniewinski.model.own.UserOwn;
 import org.ig.observer.pniewinski.network.Processor;
 import org.ig.observer.pniewinski.service.AlarmReceiver;
 
@@ -61,7 +63,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
   private Context context;
   private Processor networkProcessor;
   private BroadcastReceiver broadcastReceiver; // receive events from IgService
-  private volatile UserOwn userOwn;
+  private volatile Auth auth;
   private MenuItem menuLoginItem;
   private boolean isFirstRun = true;
 
@@ -73,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     if (isFirstRun) {
       if (isUserSignedIn()) {
         menuLoginItem.setTitle(R.string.app_log_out);
-        getSupportActionBar().setTitle(userOwn.getData().getUsername());
+        getSupportActionBar().setTitle(auth.getUser_name());
       } else {
         menuLoginItem.setTitle(R.string.app_log_in);
       }
@@ -87,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
   public boolean onOptionsItemSelected(MenuItem item) {
     int id = item.getItemId();
     if (id == R.id.button_login) {
-      Log.i(LOG_TAG, "Login clicked");
+      Log.i(LOG_TAG, "Login clicked::" + auth);
       if (isUserSignedIn()) {
         signOutUser();
       } else {
@@ -99,7 +101,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
 
 
   private boolean isAccessTokenValid() {
-    return userOwn != null && userOwn.getAccessToken() != null && !userOwn.getAccessToken().isEmpty();
+    return auth != null && auth.getAccess_token() != null && !auth.getAccess_token().isEmpty();
   }
 
   private synchronized void signInUser() {
@@ -108,18 +110,24 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
   }
 
   private void signOutUser() {
-    userOwn = null;
-    saveUserOwnToFile(null);
-    if (menuLoginItem != null) {
-      runOnUiThread(() -> {
-        menuLoginItem.setTitle(R.string.app_log_in);
-        getSupportActionBar().setTitle(R.string.app_name);
-      });
-    } else {
-      Log.w(LOG_TAG, "Menu login item is NULL!");
-    }
-  }
+    auth = null;
+    saveAuthToFile(null);
+    clearCookies(context);
+    runOnUiThread(() -> {
+      menuLoginItem.setTitle(R.string.app_log_in);
+      getSupportActionBar().setTitle(R.string.app_name);
+    });
+//    networkExecutor.submit(new Runnable() {
+//      @Override
+//      public void run() {
+//        try {
+//          networkProcessor.signOut();
+//        } catch (NetworkNotFound networkNotFound) {
+//        }
+//      }
+//    });
 
+  }
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -127,7 +135,8 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     setContentView(R.layout.activity_main);
     this.context = this;
     // Adapter
-    userOwn = loadUserOwnFromFile(context);
+    auth = loadAuthFromFile(context);
+    Log.i(LOG_TAG, "onCreate::loaded auth:: " + auth);
     CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<>(loadUsersFromFile(context));
     this.networkProcessor = new Processor();
     adapter = new IgListAdapter(this, users);
@@ -250,13 +259,13 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
       @Override
       public void run() {
         try {
-          User user = networkProcessor.getUser(userName, userOwn.getAccessToken());
+          User user = networkProcessor.getUser(userName, auth.getAccess_token());
           addUserToList(user);
           snackbar(listView, "You are now observing user: " + userName);
         } catch (UserNotFoundException e) {
           snackbar(listView, "User " + userName + " was not found");
         } catch (NetworkNotFound e) {
-          snackbar(listView, "No internet connection");
+          networkNotFoundSnackbar(listView);
         }
       }
     });
@@ -266,10 +275,6 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     return isAccessTokenValid();
   }
 
-  private void snackbar(View view, String message) {
-    Snackbar.make(view, message, Snackbar.LENGTH_LONG)
-        .setAction("Action", null).show();
-  }
 
   /**
    * Use from within adapter.
@@ -315,14 +320,14 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     });
   }
 
-  private void saveUserOwnToFile(UserOwn userOwn) {
+  private void saveAuthToFile(Auth auth) {
     fileIOExecutor.submit(new Runnable() {
       @Override
       public void run() {
         try (
-            FileOutputStream fos = context.openFileOutput(FILE_NAME_USER_OWN, Context.MODE_PRIVATE);
+            FileOutputStream fos = context.openFileOutput(FILE_NAME_AUTH, Context.MODE_PRIVATE);
             ObjectOutputStream os = new ObjectOutputStream(fos)) {
-          os.writeObject(userOwn);
+          os.writeObject(auth);
         } catch (IOException e) {
           Log.w(LOG_TAG, "Failed to save list to file: ", e);
         }
@@ -338,10 +343,10 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
   }
 
   @Override
-  public void onTokenReceived(String auth_token) {
-    Log.i(LOG_TAG, "Token received: " + auth_token);
+  public void onTokenReceived(Auth auth) {
+    Log.i(LOG_TAG, "Token received: " + auth.getAccess_token());
     if (menuLoginItem != null) {
-      setUpOwnUser(auth_token);
+      setUpOwnUser(auth);
     } else {
       Log.w(LOG_TAG, "Menu login item is NULL!");
     }
@@ -352,21 +357,22 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     signOutUser();
   }
 
-  private void setUpOwnUser(String accessToken) {
+  private void setUpOwnUser(Auth auth) {
     networkExecutor.submit(new Runnable() {
       @Override
       public void run() {
         try {
-          userOwn = networkProcessor.getOwn(accessToken);
-          userOwn.setAccessToken(accessToken);
-          saveUserOwnToFile(userOwn);
+          String userName = networkProcessor.getUserName(auth);
+          auth.setUser_name(userName);
+          MainActivity.this.auth = auth;
+          saveAuthToFile(auth);
           runOnUiThread(() -> {
             menuLoginItem.setTitle(R.string.app_log_out);
-            getSupportActionBar().setTitle(userOwn.getData().getUsername());
-            snackbar(listView, "Welcome " + userOwn.getData().getUsername());
+            getSupportActionBar().setTitle(userName);
+            snackbar(listView, "Welcome " + userName);
           });
         } catch (IOException e) {
-          Log.w(LOG_TAG, "Unexpected exception while fetching user own data: ", e);
+          Log.w(LOG_TAG, "Unexpected exception while fetching user own name: ", e);
           return;
         }
       }
