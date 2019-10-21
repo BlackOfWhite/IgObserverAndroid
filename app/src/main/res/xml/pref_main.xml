@@ -1,42 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-  <PreferenceCategory android:title="General">
-    <SwitchPreference
-      android:defaultValue="true"
-      android:key="@string/key_enable_notifications"
-      android:summary="@string/summary_enable_notifications"
-      android:title="@string/title_enable_notifications"/>
-  </PreferenceCategory>
-
-  <PreferenceCategory
-    android:title="@string/pref_title_notifications"
-    android:key="@string/key_notifications_category">
-    <SwitchPreference
-      android:defaultValue="true"
-      android:key="@string/key_notification_biography"
-      android:title="@string/title_notification_biography"/>
-    <SwitchPreference
-      android:defaultValue="true"
-      android:key="@string/key_notification_posts"
-      android:title="@string/title_notification_posts"/>
-    <SwitchPreference
-      android:defaultValue="true"
-      android:key="@string/key_notification_picture"
-      android:title="@string/title_notification_picture"/>
-    <SwitchPreference
-      android:defaultValue="true"
-      android:key="@string/key_notification_follows"
-      android:title="@string/title_notification_follows"/>
-    <SwitchPreference
-      android:defaultValue="true"
-      android:key="@string/key_notification_followed_by"
-      android:title="@string/title_notification_followed_by"/>
-    <SwitchPreference
-      android:defaultValue="true"
-      android:key="@string/key_notification_account_status"
-      android:title="@string/title_notification_account_status"/>
-  </PreferenceCategory>
-
   <PreferenceCategory android:title="@string/pref_header_about">
     <Preference
       android:key="pref_header_about"
@@ -47,6 +10,14 @@
         android:action="android.intent.action.VIEW"
         android:data="https://www.instagram.com/niewinskipiotr/"
         />
+    </Preference>
+  </PreferenceCategory>
+
+  <PreferenceCategory android:title="@string/pref_header_privacy_policy">
+    <Preference
+      android:key="pref_header_privacy_policy"
+      android:clickable="true"
+      android:summary="@string/privacy_policy">
     </Preference>
   </PreferenceCategory>
 </PreferenceScreen>

@@ -2,8 +2,8 @@ package org.ig.observer.pniewinski.activities;
 
 import static org.ig.observer.pniewinski.SnackbarUtils.networkNotFoundSnackbar;
 import static org.ig.observer.pniewinski.SnackbarUtils.snackbar;
-import static org.ig.observer.pniewinski.activities.SettingsActivity.SELECTED_USER_NAME;
-import static org.ig.observer.pniewinski.activities.SettingsActivity.SELECTED_USER_POSITION;
+import static org.ig.observer.pniewinski.activities.UserSettingsActivity.SELECTED_USER_NAME;
+import static org.ig.observer.pniewinski.activities.UserSettingsActivity.SELECTED_USER_POSITION;
 import static org.ig.observer.pniewinski.io.FileManager.FILE_NAME_AUTH;
 import static org.ig.observer.pniewinski.io.FileManager.FILE_NAME_USERS;
 import static org.ig.observer.pniewinski.io.FileManager.loadAuthFromFile;
@@ -95,6 +95,9 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
       } else {
         signInUser();
       }
+    } else if (id == R.id.action_settings) {
+      Intent intent = new Intent(this, SettingsActivity.class);
+      this.startActivity(intent);
     }
     return super.onOptionsItemSelected(item);
   }
@@ -117,16 +120,6 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
       menuLoginItem.setTitle(R.string.app_log_in);
       getSupportActionBar().setTitle(R.string.app_name);
     });
-//    networkExecutor.submit(new Runnable() {
-//      @Override
-//      public void run() {
-//        try {
-//          networkProcessor.signOut();
-//        } catch (NetworkNotFound networkNotFound) {
-//        }
-//      }
-//    });
-
   }
 
   @Override
@@ -160,7 +153,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
       @Override
       public boolean onItemLongClick(AdapterView<?> adapterView, View view, int pos, long id) {
         Log.i(LOG_TAG, "onItemClickLong: " + pos);
-        Intent myIntent = new Intent(MainActivity.this, SettingsActivity.class);
+        Intent myIntent = new Intent(MainActivity.this, UserSettingsActivity.class);
         myIntent.putExtra(SELECTED_USER_POSITION, pos);
         User selectedUser = users.get(pos);
         myIntent.putExtra(SELECTED_USER_NAME, selectedUser.getName());

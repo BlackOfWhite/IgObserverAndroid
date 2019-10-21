@@ -1,13 +1,13 @@
 package org.ig.observer.pniewinski.service;
 
 import static org.ig.observer.pniewinski.activities.MainActivity.LOG_TAG;
-import static org.ig.observer.pniewinski.activities.SettingsActivity.KEY_NOTIFICATION_ACCOUNT_STATUS;
-import static org.ig.observer.pniewinski.activities.SettingsActivity.KEY_NOTIFICATION_BIOGRAPHY;
-import static org.ig.observer.pniewinski.activities.SettingsActivity.KEY_NOTIFICATION_FOLLOWED_BY;
-import static org.ig.observer.pniewinski.activities.SettingsActivity.KEY_NOTIFICATION_FOLLOWS;
-import static org.ig.observer.pniewinski.activities.SettingsActivity.KEY_NOTIFICATION_PICTURE;
-import static org.ig.observer.pniewinski.activities.SettingsActivity.KEY_NOTIFICATION_POSTS;
-import static org.ig.observer.pniewinski.activities.SettingsActivity.PREFERENCE_SEPARATOR;
+import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_ACCOUNT_STATUS;
+import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_BIOGRAPHY;
+import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_FOLLOWED_BY;
+import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_FOLLOWS;
+import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_PICTURE;
+import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_POSTS;
+import static org.ig.observer.pniewinski.activities.UserSettingsActivity.PREFERENCE_SEPARATOR;
 import static org.ig.observer.pniewinski.io.FileManager.loadUsersFromFile;
 
 import android.app.IntentService;

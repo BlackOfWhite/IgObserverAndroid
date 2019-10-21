@@ -14,4 +14,10 @@
     android:layout_centerHorizontal="true"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"/>
+
+  <item
+    android:id="@+id/action_settings"
+    android:icon="@drawable/ic_more_vert_black_24dp"
+    app:showAsAction="ifRoom"
+    android:title="Three dot menu"/>
 </menu>
