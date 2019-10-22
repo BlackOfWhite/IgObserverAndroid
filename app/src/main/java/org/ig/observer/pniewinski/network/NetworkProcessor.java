@@ -42,6 +42,7 @@ public class NetworkProcessor {
   private static final Pattern IS_PRIVATE_PATTERN = Pattern.compile("\"is_private\":(true|false),"); // "is_private":true,
   private static final Pattern PROFILE_IMG_URL_PATTERN = Pattern
       .compile("<meta property=\"og:image\" content=\"[^\"]*"); // <meta property="og:image" content="url"
+  // {"data":{"viewer":null,"user":{"has_public_story":true,"reel":{"__typename":"GraphReel","id":"13074704943","expiring_at":1571844784,"has_pride_media":false,"latest_reel_media":null,"seen":null,"user":{"id":"13074704943","profile_pic_url":"https://scontent-frt3-1.cdninstagram.com/vp/98e27757168c9cf8b947c580fd90246f/5E5B5301/t51.2885-19/s150x150/66110408_2886982134676479_8798289133475725312_n.jpg?_nc_ht=scontent-frt3-1.cdninstagram.com","username":"xvfmaru_"},"owner":{"__typename":"GraphUser","id":"13074704943","profile_pic_url":"https://scontent-frt3-1.cdninstagram.com/vp/98e27757168c9cf8b947c580fd90246f/5E5B5301/t51.2885-19/s150x150/66110408_2886982134676479_8798289133475725312_n.jpg?_nc_ht=scontent-frt3-1.cdninstagram.com","username":"xvfmaru_"}},"edge_chaining":{"edges":[]}}},"status":"ok"}
   private static final String USER_STORIES_URL = "";
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().configure(Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
       .configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -178,6 +179,14 @@ public class NetworkProcessor {
     }
     return stringBuilder.toString();
   }
+
+  /**
+  url: https://www.instagram.com/graphql/query/?query_hash=aec5501414615eca36a9acf075655b1e&variables={"user_id":"3180508068","include_chaining":false,"include_reel":false,"include_suggested_users":false,"include_logged_out_extras":true,"include_highlight_reels":false}
+  json: {"data":{"viewer":null,"user":{"has_public_story":true,"reel":{"__typename":"GraphReel","id":"13074704943","expiring_at":1571844784,"has_pride_media":false,"latest_reel_media":null,"seen":null,"user":{"id":"13074704943","profile_pic_url":"https://scontent-frt3-1.cdninstagram.com/vp/98e27757168c9cf8b947c580fd90246f/5E5B5301/t51.2885-19/s150x150/66110408_2886982134676479_8798289133475725312_n.jpg?_nc_ht=scontent-frt3-1.cdninstagram.com","username":"xvfmaru_"},"owner":{"__typename":"GraphUser","id":"13074704943","profile_pic_url":"https://scontent-frt3-1.cdninstagram.com/vp/98e27757168c9cf8b947c580fd90246f/5E5B5301/t51.2885-19/s150x150/66110408_2886982134676479_8798289133475725312_n.jpg?_nc_ht=scontent-frt3-1.cdninstagram.com","username":"xvfmaru_"}},"edge_chaining":{"edges":[]}}},"status":"ok"}
+   */
+//   private UserStoriesSummary getUserStoriesSummary() {
+//
+//  }
 
   /**
    * Example: https://api.instagram.com/v1/self/media/recent?access_token=3032831214.9a02a8e.e506af4ba168404e9feab0275f8babc1
