@@ -35,5 +35,9 @@
       android:defaultValue="true"
       android:key="@string/key_notification_account_status"
       android:title="@string/title_notification_account_status"/>
+    <SwitchPreference
+      android:defaultValue="true"
+      android:key="@string/key_notification_has_stories"
+      android:title="@string/title_notification_has_stories"/>
   </PreferenceCategory>
 </PreferenceScreen>

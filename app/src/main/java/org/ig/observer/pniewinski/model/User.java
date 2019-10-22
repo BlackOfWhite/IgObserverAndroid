@@ -15,12 +15,14 @@ public class User implements Serializable {
   private Long follows;
   private String biography;
   private boolean is_private;
+  private boolean has_stories;
 
   public User(Long id, String name, String img_url) {
-    this(id, name, img_url, 0L, 0L, 0L, "", false);
+    this(id, name, img_url, 0L, 0L, 0L, "", false, false);
   }
 
-  public User(Long id, String name, String img_url, Long posts, Long follows, Long followed_by, String biography, boolean is_private) {
+  public User(Long id, String name, String img_url, Long posts, Long follows, Long followed_by, String biography, boolean is_private,
+      boolean has_stories) {
     this.id = id;
     this.img_url = img_url;
     this.name = name;
@@ -29,6 +31,7 @@ public class User implements Serializable {
     this.followed_by = followed_by;
     this.biography = biography;
     this.is_private = is_private;
+    this.has_stories = has_stories;
   }
 
   public static String prettyCount(Number number) {
@@ -107,23 +110,20 @@ public class User implements Serializable {
     this.is_private = is_private;
   }
 
-  @Override
-  public String toString() {
-    return "User{" +
-        "id=" + id +
-        ", name='" + name + '\'' +
-        ", img_url=" + img_url + +'\'' +
-        ", posts=" + posts +
-        ", followed_by=" + followed_by +
-        ", follows=" + follows +
-        ", biography='" + biography + '\'' +
-        ", is_private=" + is_private +
-        '}';
+  public Boolean isHas_stories() {
+    return has_stories;
+  }
+
+  public void setHas_stories(boolean has_stories) {
+    this.has_stories = has_stories;
   }
 
   public String getInfo() {
-    return is_private ? "This account is private"
-        : "Posts: " + getPosts() + "\nFollows: " + prettyCount(getFollows()) + "   Followed by: " + prettyCount(getFollowed_by());
+    if (is_private) {
+      return "This account is private";
+    }
+    return "Posts: " + getPosts() + "   " + (has_stories ? "User has some stories" : "No stories") +
+        "\nFollows: " + prettyCount(getFollows()) + "   Followed by: " + prettyCount(getFollowed_by());
   }
 
   @Override
@@ -147,6 +147,7 @@ public class User implements Serializable {
         .append(getFollows(), user.getFollows())
         .append(getBiography(), user.getBiography())
         .append(getIs_private(), user.getIs_private())
+        .append(isHas_stories(), user.isHas_stories())
         .isEquals();
   }
 
@@ -161,6 +162,7 @@ public class User implements Serializable {
         .append(getFollows())
         .append(getBiography())
         .append(getIs_private())
+        .append(isHas_stories())
         .toHashCode();
   }
 }

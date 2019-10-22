@@ -5,6 +5,7 @@ import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOT
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_BIOGRAPHY;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_FOLLOWED_BY;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_FOLLOWS;
+import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_HAS_STORIES;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_PICTURE;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_POSTS;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.PREFERENCE_SEPARATOR;
@@ -65,7 +66,7 @@ public class IgService extends IntentService {
     for (User user : userList) {
       try {
         User newUser = networkProcessor.getUser(user.getName());
-          // force notification, test purposes
+        // force notification, test purposes
 //        newUser.setBiography(user.getBiography() + " test");
         if (!user.equals(newUser)) {
           Log.i(LOG_TAG, "User " + newUser.getName() + " has changed. Comparing with its old version.");
@@ -157,6 +158,9 @@ public class IgService extends IntentService {
     }
     if (oldUser.getIs_private() != newUser.getIs_private() && isNotificationEnabled(userName, KEY_NOTIFICATION_ACCOUNT_STATUS)) {
       sb.append("Account status has just changed to " + (newUser.getIs_private() ? "private" : "public") + "! ");
+    }
+    if (oldUser.isHas_stories() != newUser.isHas_stories() && isNotificationEnabled(userName, KEY_NOTIFICATION_HAS_STORIES)) {
+      sb.append(newUser.isHas_stories() ? "Account has at least one story. " : "Account doesn't have stories anymore. ");
     }
     // Remove last space
     String message = sb.toString();

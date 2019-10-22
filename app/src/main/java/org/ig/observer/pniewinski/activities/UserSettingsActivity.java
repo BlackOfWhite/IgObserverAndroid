@@ -25,6 +25,7 @@ public class UserSettingsActivity extends AppCompatPreferenceActivity {
   public static final String KEY_NOTIFICATION_FOLLOWS = "key_notification_follows";
   public static final String KEY_NOTIFICATION_FOLLOWED_BY = "key_notification_followed_by";
   public static final String KEY_NOTIFICATION_ACCOUNT_STATUS = "key_notification_account_status";
+  public static final String KEY_NOTIFICATION_HAS_STORIES = "key_notification_has_stories";
 
   public static final String PREFERENCE_SEPARATOR = "0 |/\\| ###.:L?!'";
   public static final String SELECTED_USER_POSITION = "user_position";
@@ -135,6 +136,7 @@ public class UserSettingsActivity extends AppCompatPreferenceActivity {
       SwitchPreference follows = setupUserSpecificSwitchPreference(KEY_NOTIFICATION_FOLLOWS, preferences);
       SwitchPreference followedBy = setupUserSpecificSwitchPreference(KEY_NOTIFICATION_FOLLOWED_BY, preferences);
       SwitchPreference status = setupUserSpecificSwitchPreference(KEY_NOTIFICATION_ACCOUNT_STATUS, preferences);
+      SwitchPreference hasStories = setupUserSpecificSwitchPreference(KEY_NOTIFICATION_HAS_STORIES, preferences);
     }
 
     private SwitchPreference setupUserSpecificSwitchPreference(String preferenceKey, SharedPreferences sharedPreferences) {

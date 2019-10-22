@@ -13,6 +13,7 @@ import android.util.Log;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URL;
@@ -42,8 +43,6 @@ public class NetworkProcessor {
   private static final Pattern IS_PRIVATE_PATTERN = Pattern.compile("\"is_private\":(true|false),"); // "is_private":true,
   private static final Pattern PROFILE_IMG_URL_PATTERN = Pattern
       .compile("<meta property=\"og:image\" content=\"[^\"]*"); // <meta property="og:image" content="url"
-  // {"data":{"viewer":null,"user":{"has_public_story":true,"reel":{"__typename":"GraphReel","id":"13074704943","expiring_at":1571844784,"has_pride_media":false,"latest_reel_media":null,"seen":null,"user":{"id":"13074704943","profile_pic_url":"https://scontent-frt3-1.cdninstagram.com/vp/98e27757168c9cf8b947c580fd90246f/5E5B5301/t51.2885-19/s150x150/66110408_2886982134676479_8798289133475725312_n.jpg?_nc_ht=scontent-frt3-1.cdninstagram.com","username":"xvfmaru_"},"owner":{"__typename":"GraphUser","id":"13074704943","profile_pic_url":"https://scontent-frt3-1.cdninstagram.com/vp/98e27757168c9cf8b947c580fd90246f/5E5B5301/t51.2885-19/s150x150/66110408_2886982134676479_8798289133475725312_n.jpg?_nc_ht=scontent-frt3-1.cdninstagram.com","username":"xvfmaru_"}},"edge_chaining":{"edges":[]}}},"status":"ok"}
-  private static final String USER_STORIES_URL = "";
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().configure(Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
       .configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
 
@@ -106,8 +105,9 @@ public class NetworkProcessor {
             String biography = parseString(getMatch(next, USER_BIOGRAPHY_PATTERN), "\"", 3, 0);
             Long post_count = parseLong(getMatch(next, USER_POSTS_COUNT_PATTERN), ":", 2);
             Boolean is_private = parseBoolean(getMatch(next, IS_PRIVATE_PATTERN), ":", 1);
+            Boolean has_stories = hasPublicStories(id);
             if (id != null) {
-              return new User(id, userName, img_url, post_count, follows, followed_by, biography, is_private);
+              return new User(id, userName, img_url, post_count, follows, followed_by, biography, is_private, has_stories);
             } else {
               throw new UserNotFoundException(userName);
             }
@@ -126,6 +126,37 @@ public class NetworkProcessor {
     }
     Log.w(LOG_TAG, "getUser: " + userName + ", no patterns found in response");
     throw new UserNotFoundException(userName);
+  }
+
+  private String sendGET(String url) throws IOException, ConnectionError {
+    StringBuilder stringBuilder = new StringBuilder();
+    HttpsURLConnection sslConnection;
+
+    URLConnection urlConnection = new URL(url).openConnection();
+    sslConnection = (HttpsURLConnection) urlConnection;
+    if (sslConnection == null) {
+      Log.i(LOG_TAG, "Failed to open HTTPS connection.");
+      throw new ConnectionError();
+    }
+    sslConnection.setInstanceFollowRedirects(false);
+    sslConnection.connect();
+    int responseCode = sslConnection.getResponseCode();
+    if (responseCode >= 400) {
+      Log.i(LOG_TAG, "Got invalid response code: " + responseCode + ", response message: " + sslConnection.getResponseMessage());
+      throw new ConnectionError();
+    } else if (responseCode >= 300) {
+      Log.i(LOG_TAG, "Got redirect response code: " + responseCode + ", response message: " + sslConnection.getResponseMessage());
+      throw new ConnectionError();
+    }
+    try (BufferedReader br =
+        new BufferedReader(
+            new InputStreamReader(sslConnection.getInputStream()))) {
+      String next;
+      while ((next = br.readLine()) != null) {
+        stringBuilder.append(next);
+      }
+    }
+    return stringBuilder.toString();
   }
 
   private String sendPOST(String url, Map<String, String> headers) throws NetworkNotFound {
@@ -180,13 +211,22 @@ public class NetworkProcessor {
     return stringBuilder.toString();
   }
 
-  /**
-  url: https://www.instagram.com/graphql/query/?query_hash=aec5501414615eca36a9acf075655b1e&variables={"user_id":"3180508068","include_chaining":false,"include_reel":false,"include_suggested_users":false,"include_logged_out_extras":true,"include_highlight_reels":false}
-  json: {"data":{"viewer":null,"user":{"has_public_story":true,"reel":{"__typename":"GraphReel","id":"13074704943","expiring_at":1571844784,"has_pride_media":false,"latest_reel_media":null,"seen":null,"user":{"id":"13074704943","profile_pic_url":"https://scontent-frt3-1.cdninstagram.com/vp/98e27757168c9cf8b947c580fd90246f/5E5B5301/t51.2885-19/s150x150/66110408_2886982134676479_8798289133475725312_n.jpg?_nc_ht=scontent-frt3-1.cdninstagram.com","username":"xvfmaru_"},"owner":{"__typename":"GraphUser","id":"13074704943","profile_pic_url":"https://scontent-frt3-1.cdninstagram.com/vp/98e27757168c9cf8b947c580fd90246f/5E5B5301/t51.2885-19/s150x150/66110408_2886982134676479_8798289133475725312_n.jpg?_nc_ht=scontent-frt3-1.cdninstagram.com","username":"xvfmaru_"}},"edge_chaining":{"edges":[]}}},"status":"ok"}
-   */
-//   private UserStoriesSummary getUserStoriesSummary() {
-//
-//  }
+  private boolean hasPublicStories(Long userId) {
+    String url = "https://www.instagram.com/graphql/query/?query_hash=aec5501414615eca36a9acf075655b1e"
+        + "&variables={\"user_id\":\"" + userId + "\","
+        + "\"include_reel\":true,"
+        + "\"include_logged_out_extras\":true}";
+    try {
+      String json = sendGET(url);
+      if (json.contains("has_public_story\":true")) {
+        return true;
+      }
+    } catch (Exception e) {
+      Log.w(LOG_TAG, "Unexpected exception while getting content of: " + url);
+      return false;
+    }
+    return false;
+  }
 
   /**
    * Example: https://api.instagram.com/v1/self/media/recent?access_token=3032831214.9a02a8e.e506af4ba168404e9feab0275f8babc1

@@ -4,7 +4,6 @@ import static org.ig.observer.pniewinski.SnackbarUtils.networkNotFoundSnackbar;
 import static org.ig.observer.pniewinski.SnackbarUtils.snackbar;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.SELECTED_USER_NAME;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.SELECTED_USER_POSITION;
-import static org.ig.observer.pniewinski.io.FileManager.FILE_NAME_AUTH;
 import static org.ig.observer.pniewinski.io.FileManager.FILE_NAME_USERS;
 import static org.ig.observer.pniewinski.io.FileManager.loadUsersFromFile;
 
@@ -42,7 +41,6 @@ import org.ig.observer.pniewinski.IgListAdapter;
 import org.ig.observer.pniewinski.R;
 import org.ig.observer.pniewinski.exceptions.NetworkNotFound;
 import org.ig.observer.pniewinski.exceptions.UserNotFoundException;
-import org.ig.observer.pniewinski.model.Auth;
 import org.ig.observer.pniewinski.model.User;
 import org.ig.observer.pniewinski.network.NetworkProcessor;
 import org.ig.observer.pniewinski.service.AlarmReceiver;

@@ -30,7 +30,7 @@ public class Utils {
       FileInputStream fis = context.openFileInput(picName);
       return BitmapFactory.decodeStream(fis);
     } catch (FileNotFoundException e) {
-      Log.w(LOG_TAG, "File " + picName + " not found.", e);
+      Log.w(LOG_TAG, "File " + picName + " not found.");
       return null;
     }
   }

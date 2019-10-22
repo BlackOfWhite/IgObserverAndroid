@@ -78,4 +78,6 @@
   <string name="key_notification_followed_by">key_notification_followed_by</string>
   <string name="title_notification_account_status">Account status (private/public)</string>
   <string name="key_notification_account_status">key_notification_account_status</string>
+  <string name="title_notification_has_stories">Has any stories</string>
+  <string name="key_notification_has_stories">key_notification_has_stories</string>
 </resources>
