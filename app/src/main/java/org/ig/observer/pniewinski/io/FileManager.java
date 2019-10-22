@@ -9,7 +9,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.concurrent.CopyOnWriteArrayList;
-import org.ig.observer.pniewinski.model.Auth;
 import org.ig.observer.pniewinski.model.User;
 
 public class FileManager {
@@ -33,22 +32,4 @@ public class FileManager {
     }
     return new CopyOnWriteArrayList<>();
   }
-
-  public static Auth loadAuthFromFile(Context context) {
-    try (
-        FileInputStream fis = context.openFileInput(FILE_NAME_AUTH);
-        ObjectInputStream is = new ObjectInputStream(fis)) {
-      Auth userOwn = (Auth) is.readObject();
-      Log.i(LOG_TAG, "loadedTokenFromFile: " + userOwn);
-      return userOwn;
-    } catch (FileNotFoundException e) {
-      Log.w(LOG_TAG, "Failed to find file: ", e);
-    } catch (IOException | ClassNotFoundException e) {
-      Log.w(LOG_TAG, "Failed to load list from file: ", e);
-    } catch (Exception e) {
-      Log.w(LOG_TAG, "Failed to load list from file. Unexpected exception: ", e);
-    }
-    return null;
-  }
-
 }

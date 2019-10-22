@@ -1,14 +1,26 @@
 <resources>
   <string name="app_name">Ig Observer</string>
-  <string name="app_log_in">Log in</string>
-  <string name="app_log_out">Log out</string>
 
-  <!-- Instagram API -->
-  <string name="client_id">9a02a8eec2f942dfa3a62661fbc1cac3</string>
-  <string name="app_id">402789607079655</string>
-  <string name="base_url">https://api.instagram.com/</string>
-  <string name="redirect_url">https://www.instagram.com/</string>
-  <string name="scope">user_profile,user_media</string>
+  <string name="new_post">%s has just added a new post.</string>
+  <string name="removed_post">%s has just removed a post.</string>
+
+  <string name="new_follower">%s has %d new follower(s). Total: %d.</string>
+  <string name="lost_follower">%s has just lost %d follower(s). Total: %d.</string>
+
+  <string name="bio_changed">%s has just changed his biography.</string>
+
+  <string name="new_post_comment">%s has just received a new comment from %s.</string>
+  <string name="lost_post_comment">%s has just lost a comment from %s.</string>
+
+  <string name="profile_picture_changed">%s has just changed his profile picture.</string>
+
+  <string name="change_to_private">% has just changed his account to private.</string>
+  <string name="change_to_private_i">Unfortunately, from now on you will only able to observe %s\'s number of followers, biography and profile picture.</string>
+  <string name="change_to_public">% has just changed his account to public.</string>
+  <string name="change_to_public_i">Great, from now on you will able to access all features of IgObserver.</string>
+
+  <string name="new_story">% has just added a new story.</string>
+  <string name="blocked_story">Attempted to view %s stories, but failed. It is possible that you have been blocked by this person.</string>
 
   <!-- Settings -->
   <string name="s_story">Viewing Instagram stories requires user to be signed in, therefore if you want to access this feature we suggest you to use built-in login functionality.
@@ -23,6 +35,7 @@
   <string name="summary_enable_notifications">Show notifications for all observed accounts</string>
   <string name="key_enable_notifications">key_enable_notifications</string>
 
+  <!-- Privacy Policy -->
   <string name="pref_header_about">About</string>
   <string name="summary_about">Made with ❤ by <a href="https://www.instagram.com/niewinskipiotr/">@niewinskipiotr</a>
     \n\nNot affiliated with Instagram and we do not store any of the Instagram data, all rights belong to their respective owners.
@@ -51,6 +64,7 @@
     \nIgObserver is not in the business of selling your information. We consider this information to be a vital part of our relationship with you.
   </string>
 
+  <!-- Notifications -->
   <string name="pref_title_notifications">Notifications</string>
   <string name="title_notification_biography">Biography</string>
   <string name="key_notification_biography">key_notification_biography</string>

@@ -32,7 +32,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.ig.observer.pniewinski.R;
 import org.ig.observer.pniewinski.activities.MainActivity;
 import org.ig.observer.pniewinski.model.User;
-import org.ig.observer.pniewinski.network.Processor;
+import org.ig.observer.pniewinski.network.NetworkProcessor;
 
 public class IgService extends IntentService {
 
@@ -58,13 +58,13 @@ public class IgService extends IntentService {
   }
 
   private void processUsers(List<User> userList) {
-    Processor processor = new Processor();
+    NetworkProcessor networkProcessor = new NetworkProcessor();
     CopyOnWriteArrayList<User> newUserList = new CopyOnWriteArrayList<>();
     Map<User, String> userNotificationMessages = new HashMap<>();
     // Get notification settings
     for (User user : userList) {
       try {
-//        User newUser = processor.getUser(user.getName());
+//        User newUser = networkProcessor.getUser(user.getName());
         User newUser = null;
         // force notification, test purposes
 //        newUser.setBiography(user.getBiography() + " test");
