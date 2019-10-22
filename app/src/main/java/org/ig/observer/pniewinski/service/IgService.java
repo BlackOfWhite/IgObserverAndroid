@@ -32,6 +32,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.ig.observer.pniewinski.R;
 import org.ig.observer.pniewinski.activities.MainActivity;
+import org.ig.observer.pniewinski.exceptions.UserRemovedError;
 import org.ig.observer.pniewinski.model.User;
 import org.ig.observer.pniewinski.network.NetworkProcessor;
 
@@ -80,6 +81,10 @@ public class IgService extends IntentService {
           // Skip user, they are the same
           newUserList.add(user);
         }
+        // Handle special case where user has removed account, do not keep it in the list
+      } catch (UserRemovedError e) {
+        Log.w(LOG_TAG, "User probably removed his/her account!", e);
+        userNotificationMessages.put(user, "User has probably removed his/her account!");
       } catch (Exception e) {
         Log.w(LOG_TAG, "Exception while fetching data for user:: " + user.getName(), e);
         newUserList.add(user);
@@ -125,7 +130,7 @@ public class IgService extends IntentService {
     mBuilder.setContentIntent(contentIntent);
     mBuilder.setVibrate(new long[]{1000, 1000, 1000, 1000, 1000});
     mBuilder.setSound(Settings.System.DEFAULT_NOTIFICATION_URI);
-    mBuilder.setAutoCancel(true);
+//    mBuilder.setAutoCancel(true);
     return mBuilder;
   }
 

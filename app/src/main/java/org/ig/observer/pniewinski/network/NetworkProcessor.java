@@ -28,6 +28,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.ig.observer.pniewinski.exceptions.ConnectionError;
 import org.ig.observer.pniewinski.exceptions.NetworkNotFound;
 import org.ig.observer.pniewinski.exceptions.UserNotFoundException;
+import org.ig.observer.pniewinski.exceptions.UserRemovedError;
 import org.ig.observer.pniewinski.model.User;
 
 public class NetworkProcessor {
@@ -63,7 +64,7 @@ public class NetworkProcessor {
     }
   }
 
-  public User getUser(String userName) throws UserNotFoundException, NetworkNotFound {
+  public User getUser(String userName) throws UserNotFoundException, NetworkNotFound, UserRemovedError {
     HttpsURLConnection sslConnection;
     try {
       URLConnection urlConnection = new URL(String.format(USER_FEED_URL, userName)).openConnection();
@@ -83,7 +84,10 @@ public class NetworkProcessor {
 //      sslConnection.setRequestProperty("Accept-Encoding", "gzip, deflate");
 //      sslConnection.setRequestProperty("Connection", "keep-alive");
       int responseCode = sslConnection.getResponseCode();
-      if (responseCode >= 400) {
+      if (responseCode == 404) {
+        Log.i(LOG_TAG, "Got invalid response code: " + responseCode + ", response message: " + sslConnection.getResponseMessage());
+        throw new UserRemovedError(userName);
+      } else if (responseCode >= 400) {
         Log.i(LOG_TAG, "Got invalid response code: " + responseCode + ", response message: " + sslConnection.getResponseMessage());
         throw new ConnectionError();
       } else if (responseCode >= 300) {

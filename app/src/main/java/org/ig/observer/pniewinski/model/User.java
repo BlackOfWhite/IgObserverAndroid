@@ -127,6 +127,21 @@ public class User implements Serializable {
   }
 
   @Override
+  public String toString() {
+    return "User{" +
+        "id=" + id +
+        ", name='" + name + '\'' +
+        ", img_url='" + img_url + '\'' +
+        ", posts=" + posts +
+        ", followed_by=" + followed_by +
+        ", follows=" + follows +
+        ", biography='" + biography + '\'' +
+        ", is_private=" + is_private +
+        ", has_stories=" + has_stories +
+        '}';
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) {
       return true;
