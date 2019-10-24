@@ -44,7 +44,7 @@ public class IgListAdapter extends ArrayAdapter {
   }
 
   private void loadAsyncImage(ImageView imageView, User user) {
-    final String imgName = user.getId()  + ".png";
+    final String imgName = user.getImg_url().replace("/", "_") + ".png";
     Bitmap b = Utils.loadBitmap(mainActivity, imgName);
     if (b == null) {
       new DownloadImageTask(mainActivity, imageView, imgName).execute(user.getImg_url());

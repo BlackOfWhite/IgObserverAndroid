@@ -71,6 +71,7 @@ public class IgService extends IntentService {
 //        newUser.setBiography(user.getBiography() + " test");
         if (!user.equals(newUser)) {
           Log.i(LOG_TAG, "User " + newUser.getName() + " has changed. Comparing with its old version.");
+          Log.i(LOG_TAG, "old: " + user + "\nnew: " + newUser);
           newUserList.add(newUser);
           // Check for notifications
           String userNotificationMsg = buildUserNotificationMessage(user, newUser);
