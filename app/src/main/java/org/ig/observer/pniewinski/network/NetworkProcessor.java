@@ -23,12 +23,12 @@ import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.regex.Pattern;
 import javax.net.ssl.HttpsURLConnection;
+import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.DeserializationConfig.Feature;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.ig.observer.pniewinski.exceptions.ConnectionError;
 import org.ig.observer.pniewinski.exceptions.NetworkNotFound;
 import org.ig.observer.pniewinski.exceptions.UserNotFoundException;
-import org.ig.observer.pniewinski.exceptions.UserRemovedError;
 import org.ig.observer.pniewinski.model.User;
 
 public class NetworkProcessor {
@@ -64,19 +64,35 @@ public class NetworkProcessor {
     }
   }
 
-  public User getUser(String userName) throws UserNotFoundException, NetworkNotFound, UserRemovedError {
+  public User getUser(String userName) throws UserNotFoundException, NetworkNotFound {
     try {
-      User user = getUserFromJson(userName);
+      User jsonUser = getUserFromJson(userName);
+      Log.i(LOG_TAG, "Json user: " + jsonUser);
+      return jsonUser;
     } catch (Exception e) {
-
+      Log.i(LOG_TAG, "Failed to fetch data for user: " + userName + ". Attempt to scrap html page.");
+      return getUserFromHtml(userName);
     }
-    return getUserFromHtml(userName);
   }
 
   private User getUserFromJson(String userName) throws NetworkNotFound, UserNotFoundException {
     try {
       final String json = sendGET("https://www.instagram.com/" + userName + "/?__a=1");
-      Log.i(LOG_TAG, "getUser json::\n" + json);
+      JsonNode jsonNode = OBJECT_MAPPER.readTree(json).get("graphql").get("user");
+      Long id = Long.parseLong(jsonNode.get("id").getTextValue());
+      Long follows = jsonNode.get("edge_follow").get("count").getLongValue();
+      Long followed_by = jsonNode.get("edge_followed_by").get("count").getLongValue();
+      String biography = jsonNode.get("biography").getTextValue();
+      Long post_count = jsonNode.get("edge_owner_to_timeline_media").get("count").getLongValue();
+      Boolean is_private = jsonNode.get("is_private").getBooleanValue();
+      String img_url = jsonNode.get("profile_pic_url").getTextValue();
+      if (id != null) {
+        Boolean has_stories = hasPublicStories(id);
+        return new User(id, userName, img_url, post_count, follows, followed_by, biography, is_private, has_stories);
+      } else {
+        Log.w(LOG_TAG, "getUser: " + userName + ", no patterns found in response");
+        throw new UserNotFoundException(userName);
+      }
     } catch (UnknownHostException e) {
       Log.w(LOG_TAG, "getUser: " + userName, e);
       throw new NetworkNotFound();
@@ -84,7 +100,6 @@ public class NetworkProcessor {
       Log.w(LOG_TAG, "getUser: " + userName, e);
       throw new UserNotFoundException(userName);
     }
-    return null;
   }
 
   private User getUserFromHtml(String userName) throws NetworkNotFound, UserNotFoundException {

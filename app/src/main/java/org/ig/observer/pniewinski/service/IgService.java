@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.ig.observer.pniewinski.R;
 import org.ig.observer.pniewinski.activities.MainActivity;
@@ -92,7 +93,8 @@ public class IgService extends IntentService {
         continue;
       }
       try {
-        Thread.sleep(10_000);
+        // Some delay to avoid being redirected
+        Thread.sleep(5_000 + 1_000 * new Random().nextInt(5));
       } catch (InterruptedException e) {
         Log.e(LOG_TAG, "Interrupted IgService!", e);
       }
