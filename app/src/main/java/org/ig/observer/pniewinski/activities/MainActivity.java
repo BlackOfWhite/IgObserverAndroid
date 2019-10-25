@@ -165,7 +165,8 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void showAddItemDialog() {
-    final EditText taskEditText = new EditText(this);
+    EditText taskEditText = new EditText(this);
+    taskEditText.setSingleLine(true);
     AlertDialog dialog = new Builder(this, R.style.AlertDialogStyle)
         .setTitle("Observe new user")
         .setMessage("Enter name of the user to follow")

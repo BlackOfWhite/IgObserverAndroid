@@ -91,6 +91,11 @@ public class IgService extends IntentService {
         newUserList.add(user);
         continue;
       }
+      try {
+        Thread.sleep(10_000);
+      } catch (InterruptedException e) {
+        Log.e(LOG_TAG, "Interrupted IgService!", e);
+      }
     }
     if (userList.size() != newUserList.size()) {
       Log.i(LOG_TAG,

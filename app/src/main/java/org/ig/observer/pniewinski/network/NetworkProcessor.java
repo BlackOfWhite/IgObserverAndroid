@@ -65,62 +65,18 @@ public class NetworkProcessor {
   }
 
   public User getUser(String userName) throws UserNotFoundException, NetworkNotFound, UserRemovedError {
-    HttpsURLConnection sslConnection;
     try {
-      URLConnection urlConnection = new URL(String.format(USER_FEED_URL, userName)).openConnection();
-      sslConnection = (HttpsURLConnection) urlConnection;
-      if (sslConnection == null) {
-        Log.i(LOG_TAG, "Failed to open HTTPS connection.");
-        throw new ConnectionError();
-      }
-      sslConnection.setInstanceFollowRedirects(false);
-      sslConnection.connect();
-      // Headers
-//      sslConnection.setRequestProperty("User-Agent", "PostmanRuntime/7.18.0");
-//      sslConnection.setRequestProperty("Accept", "*/*");
-//      sslConnection.setRequestProperty("Cache-Control", "no-cache");
-//      sslConnection.setRequestProperty("Postman-Token", "0f4a37b5-715c-4770-8c77-5cd8025be427");
-//      sslConnection.setRequestProperty("Host", "www.instagram.com");
-//      sslConnection.setRequestProperty("Accept-Encoding", "gzip, deflate");
-//      sslConnection.setRequestProperty("Connection", "keep-alive");
-      int responseCode = sslConnection.getResponseCode();
-      if (responseCode == 404) {
-        Log.i(LOG_TAG, "Got invalid response code: " + responseCode + ", response message: " + sslConnection.getResponseMessage());
-        throw new UserRemovedError(userName);
-      } else if (responseCode >= 400) {
-        Log.i(LOG_TAG, "Got invalid response code: " + responseCode + ", response message: " + sslConnection.getResponseMessage());
-        throw new ConnectionError();
-      } else if (responseCode >= 300) {
-        Log.i(LOG_TAG, "Got redirect response code: " + responseCode + ", response message: " + sslConnection.getResponseMessage());
-        throw new ConnectionError();
-      }
-      String img_url = null;
-      try (BufferedReader br =
-          new BufferedReader(
-              new InputStreamReader(sslConnection.getInputStream()))) {
-        String next;
-        while ((next = br.readLine()) != null) {
-//          Log.i(LOG_TAG, next);
-          if (next.contains("<script type=\"text/javascript\">window._sharedData = {\"config\":{\"csrf_token\"")) {
-//            Log.i(LOG_TAG, "User data line was found: " + next);
-            Long id = parseLong(getMatch(next, USER_ID_PATTERN), "\"", 3, 10);
-            Long follows = parseLong(getMatch(next, FOLLOWS_PATTERN), ":", 2);
-            Long followed_by = parseLong(getMatch(next, FOLLOWED_BY_PATTERN), ":", 2);
-            String biography = parseString(getMatch(next, USER_BIOGRAPHY_PATTERN), "\"", 3, 0);
-            Long post_count = parseLong(getMatch(next, USER_POSTS_COUNT_PATTERN), ":", 2);
-            Boolean is_private = parseBoolean(getMatch(next, IS_PRIVATE_PATTERN), ":", 1);
-            Boolean has_stories = hasPublicStories(id);
-            if (id != null) {
-              return new User(id, userName, img_url, post_count, follows, followed_by, biography, is_private, has_stories);
-            } else {
-              throw new UserNotFoundException(userName);
-            }
-          } else if (img_url == null) {
-            // this  should be matched before statement above
-            img_url = parseString(getMatch(next, PROFILE_IMG_URL_PATTERN), "\"", 3, 0);
-          }
-        }
-      }
+      User user = getUserFromJson(userName);
+    } catch (Exception e) {
+
+    }
+    return getUserFromHtml(userName);
+  }
+
+  private User getUserFromJson(String userName) throws NetworkNotFound, UserNotFoundException {
+    try {
+      final String json = sendGET("https://www.instagram.com/" + userName + "/?__a=1");
+      Log.i(LOG_TAG, "getUser json::\n" + json);
     } catch (UnknownHostException e) {
       Log.w(LOG_TAG, "getUser: " + userName, e);
       throw new NetworkNotFound();
@@ -128,8 +84,38 @@ public class NetworkProcessor {
       Log.w(LOG_TAG, "getUser: " + userName, e);
       throw new UserNotFoundException(userName);
     }
-    Log.w(LOG_TAG, "getUser: " + userName + ", no patterns found in response");
-    throw new UserNotFoundException(userName);
+    return null;
+  }
+
+  private User getUserFromHtml(String userName) throws NetworkNotFound, UserNotFoundException {
+    String url = String.format(USER_FEED_URL, userName);
+    String content = null;
+    try {
+      content = sendGET(url);
+    } catch (UnknownHostException e) {
+      Log.w(LOG_TAG, "getUser: " + userName, e);
+      throw new NetworkNotFound();
+    } catch (Exception e) {
+      Log.w(LOG_TAG, "getUser: " + userName, e);
+      throw new UserNotFoundException(userName);
+    }
+
+    int indexStart = content.indexOf("<script type=\"text/javascript\">window._sharedData = {\"config\":{\"csrf_token\"");
+    String match = content.substring(indexStart);
+    Long id = parseLong(getMatch(match, USER_ID_PATTERN), "\"", 3, 10);
+    Long follows = parseLong(getMatch(match, FOLLOWS_PATTERN), ":", 2);
+    Long followed_by = parseLong(getMatch(match, FOLLOWED_BY_PATTERN), ":", 2);
+    String biography = parseString(getMatch(match, USER_BIOGRAPHY_PATTERN), "\"", 3, 0);
+    Long post_count = parseLong(getMatch(match, USER_POSTS_COUNT_PATTERN), ":", 2);
+    Boolean is_private = parseBoolean(getMatch(match, IS_PRIVATE_PATTERN), ":", 1);
+    Boolean has_stories = hasPublicStories(id);
+    if (id != null) {
+      String img_url = parseString(getMatch(content, PROFILE_IMG_URL_PATTERN), "\"", 3, 0);
+      return new User(id, userName, img_url, post_count, follows, followed_by, biography, is_private, has_stories);
+    } else {
+      Log.w(LOG_TAG, "getUser: " + userName + ", no patterns found in response");
+      throw new UserNotFoundException(userName);
+    }
   }
 
   private String sendGET(String url) throws IOException, ConnectionError {
@@ -140,17 +126,17 @@ public class NetworkProcessor {
     sslConnection = (HttpsURLConnection) urlConnection;
     if (sslConnection == null) {
       Log.i(LOG_TAG, "Failed to open HTTPS connection.");
-      throw new ConnectionError();
+      throw new ConnectionError(0);
     }
     sslConnection.setInstanceFollowRedirects(false);
     sslConnection.connect();
     int responseCode = sslConnection.getResponseCode();
     if (responseCode >= 400) {
       Log.i(LOG_TAG, "Got invalid response code: " + responseCode + ", response message: " + sslConnection.getResponseMessage());
-      throw new ConnectionError();
+      throw new ConnectionError(responseCode);
     } else if (responseCode >= 300) {
-      Log.i(LOG_TAG, "Got redirect response code: " + responseCode + ", response message: " + sslConnection.getResponseMessage());
-      throw new ConnectionError();
+      Log.i(LOG_TAG, url + " :: Got redirect response code: " + responseCode + ", response message: " + sslConnection.getResponseMessage());
+      throw new ConnectionError(responseCode);
     }
     try (BufferedReader br =
         new BufferedReader(
@@ -171,7 +157,7 @@ public class NetworkProcessor {
       sslConnection = (HttpsURLConnection) urlConnection;
       if (sslConnection == null) {
         Log.i(LOG_TAG, "Failed to open HTTPS connection.");
-        throw new ConnectionError();
+        throw new ConnectionError(0);
       }
       sslConnection.setInstanceFollowRedirects(false);
       sslConnection.setRequestMethod("POST");
@@ -194,7 +180,7 @@ public class NetworkProcessor {
       int responseCode = sslConnection.getResponseCode();
       if (responseCode >= 400) {
         Log.i(LOG_TAG, "Got invalid response code: " + responseCode + ", response message: " + sslConnection.getResponseMessage());
-        throw new ConnectionError();
+        throw new ConnectionError(responseCode);
       } else {
         Log.i(LOG_TAG, "Response code: " + responseCode);
       }
