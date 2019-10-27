@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.ig.observer.pniewinski.IgListAdapter;
+import org.ig.observer.pniewinski.adapters.IgListAdapter;
 import org.ig.observer.pniewinski.R;
 import org.ig.observer.pniewinski.auth.AuthenticationDialog;
 import org.ig.observer.pniewinski.auth.AuthenticationListener;
@@ -77,6 +77,9 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     int id = item.getItemId();
     if (id == R.id.action_settings) {
       Intent intent = new Intent(this, SettingsActivity.class);
+      this.startActivity(intent);
+    } else if (id == R.id.history_settings) {
+      Intent intent = new Intent(this, HistoryActivity.class);
       this.startActivity(intent);
     } else if (id == R.id.button_login) {
       AuthenticationDialog authenticationDialog = new AuthenticationDialog(this);

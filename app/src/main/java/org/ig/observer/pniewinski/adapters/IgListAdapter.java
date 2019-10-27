@@ -1,4 +1,4 @@
-package org.ig.observer.pniewinski;
+package org.ig.observer.pniewinski.adapters;
 
 import static org.ig.observer.pniewinski.activities.MainActivity.LOG_TAG;
 
@@ -24,6 +24,7 @@ import android.widget.TextView;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.commons.text.StringEscapeUtils;
+import org.ig.observer.pniewinski.R;
 import org.ig.observer.pniewinski.activities.MainActivity;
 import org.ig.observer.pniewinski.image.DownloadImageTask;
 import org.ig.observer.pniewinski.image.Utils;

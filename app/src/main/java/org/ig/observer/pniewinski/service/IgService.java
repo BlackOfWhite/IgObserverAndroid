@@ -9,7 +9,9 @@ import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOT
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_PICTURE;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_POSTS;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.PREFERENCE_SEPARATOR;
+import static org.ig.observer.pniewinski.io.FileManager.FILE_NAME_HISTORY;
 import static org.ig.observer.pniewinski.io.FileManager.loadCookieFromFile;
+import static org.ig.observer.pniewinski.io.FileManager.loadHistoryFromFile;
 import static org.ig.observer.pniewinski.io.FileManager.loadUsersFromFile;
 
 import android.app.IntentService;
@@ -26,8 +28,16 @@ import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationCompat.BigTextStyle;
 import android.util.Log;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -35,14 +45,18 @@ import org.ig.observer.pniewinski.R;
 import org.ig.observer.pniewinski.activities.MainActivity;
 import org.ig.observer.pniewinski.exceptions.ConnectionError;
 import org.ig.observer.pniewinski.exceptions.UserRemovedError;
+import org.ig.observer.pniewinski.model.History;
 import org.ig.observer.pniewinski.model.User;
 import org.ig.observer.pniewinski.network.NetworkProcessor;
 
 public class IgService extends IntentService {
 
-
+  private static final int QUEUE_SIZE = 100;
+  private static final NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.US);
+  private final String ARROW_RIGHT = " \\u27a1\\ufe0f ";
   private SharedPreferences preferences;
   private String preferencePattern = "%s" + PREFERENCE_SEPARATOR + "%s"; // username + PREFERENCE_SEPARATOR + key
+  private LinkedList<History> historiesTmp = new LinkedList<>();
 
   public IgService() {
     super("IgService");
@@ -67,6 +81,7 @@ public class IgService extends IntentService {
     NetworkProcessor networkProcessor = new NetworkProcessor();
     CopyOnWriteArrayList<User> newUserList = new CopyOnWriteArrayList<>();
     Map<User, String> userNotificationMessages = new HashMap<>();
+    historiesTmp.clear();
     // Get notification settings
     for (User user : userList) {
       try {
@@ -126,6 +141,18 @@ public class IgService extends IntentService {
     intent.putExtra("user_list", newUserList);
     sendBroadcast(intent);
 
+    // Update history
+    if (historiesTmp.size() > 0) {
+      LinkedList<History> histories = loadHistoryFromFile(this);
+      for (History history : historiesTmp) {
+        histories.addFirst(history);
+      }
+      if (histories.size() > QUEUE_SIZE) {
+        histories = new LinkedList<>(histories.subList(0, QUEUE_SIZE));
+      }
+      saveHistoryToFile(histories);
+    }
+
     // Send notifications
     final NotificationManager mNotificationManager = getNotificationManager();
     Log.i(LOG_TAG, "Notification massages: " + userNotificationMessages);
@@ -156,35 +183,57 @@ public class IgService extends IntentService {
   private String buildUserNotificationMessage(User oldUser, User newUser) {
     StringBuilder sb = new StringBuilder();
     String userName = oldUser.getName();
+    String timestamp = getTimestamp();
     if (!oldUser.getBiography().equals(newUser.getBiography()) && isNotificationEnabled(userName, KEY_NOTIFICATION_BIOGRAPHY)) {
-      sb.append("The biography has changed. ");
+      String message = "The biography has changed. ";
+      sb.append(message);
+      historiesTmp.addFirst(new History(oldUser.getName(), timestamp,
+          message + "\n" + oldUser.getBiography() + "\n" + ARROW_RIGHT + "\n" + newUser.getBiography()));
     }
     if (!oldUser.getImg_url().equals(newUser.getImg_url()) && isNotificationEnabled(userName, KEY_NOTIFICATION_PICTURE)) {
-      sb.append("There is a new profile picture. ");
+      String message = "There is a new profile picture. ";
+      sb.append(message);
+      historiesTmp.addFirst(new History(oldUser.getName(), timestamp, message));
     }
     if ((long) oldUser.getFollows() != newUser.getFollows() && isNotificationEnabled(userName, KEY_NOTIFICATION_FOLLOWS)) {
       Long old = oldUser.getFollows();
       Long newV = newUser.getFollows();
       long diff = newV - old;
-      sb.append("User is now following " + Math.abs(diff) + " accounts " + (diff > 0 ? "more." : "less.") + " ");
+      String message = "User is now following " + Math.abs(diff) + " accounts " + (diff > 0 ? "more." : "less.") + " ";
+      sb.append(message);
+      historiesTmp.addFirst(
+          new History(oldUser.getName(), timestamp,
+              message + "\n" + numberFormat.format(old) + ARROW_RIGHT + numberFormat.format(newV)));
     }
     if ((long) oldUser.getFollowed_by() != newUser.getFollowed_by() && isNotificationEnabled(userName, KEY_NOTIFICATION_FOLLOWED_BY)) {
       Long old = oldUser.getFollowed_by();
       Long newV = newUser.getFollowed_by();
       long diff = newV - old;
-      sb.append("User has just " + (diff > 0 ? "gained " : "lost ") + Math.abs(diff) + " followers. ");
+      String message = "User has just " + (diff > 0 ? "gained " : "lost ") + Math.abs(diff) + " followers. ";
+      sb.append(message);
+      historiesTmp.addFirst(
+          new History(oldUser.getName(), timestamp,
+              message + "\n" + numberFormat.format(old) + ARROW_RIGHT + numberFormat.format(newV)));
     }
     if ((long) oldUser.getPosts() != newUser.getPosts() && isNotificationEnabled(userName, KEY_NOTIFICATION_POSTS)) {
       Long old = oldUser.getPosts();
       Long newV = newUser.getPosts();
       long diff = newV - old;
-      sb.append("User has just " + (diff > 0 ? "added " : "removed ") + Math.abs(diff) + " post(s). ");
+      String message = "User has just " + (diff > 0 ? "added " : "removed ") + Math.abs(diff) + " post(s). ";
+      sb.append(message);
+      historiesTmp.addFirst(
+          new History(oldUser.getName(), timestamp,
+              message + "\n" + numberFormat.format(old) + ARROW_RIGHT + numberFormat.format(newV)));
     }
     if (oldUser.getIs_private() != newUser.getIs_private() && isNotificationEnabled(userName, KEY_NOTIFICATION_ACCOUNT_STATUS)) {
-      sb.append("Account status has just changed to " + (newUser.getIs_private() ? "private" : "public") + "! ");
+      String message = "Account status has just changed to " + (newUser.getIs_private() ? "private" : "public") + "! ";
+      sb.append(message);
+      historiesTmp.addFirst(new History(oldUser.getName(), timestamp, message));
     }
     if (oldUser.isHas_stories() != newUser.isHas_stories() && isNotificationEnabled(userName, KEY_NOTIFICATION_HAS_STORIES)) {
-      sb.append(newUser.isHas_stories() ? "Account has at least one story. " : "Account doesn't have stories anymore. ");
+      String message = newUser.isHas_stories() ? "Account has at least one story. " : "Account doesn't have stories anymore. ";
+      sb.append(message);
+      historiesTmp.addFirst(new History(oldUser.getName(), timestamp, message));
     }
     // Remove last space
     String message = sb.toString();
@@ -218,5 +267,25 @@ public class IgService extends IntentService {
       notification_manager.createNotificationChannel(mChannel);
     }
     return notification_manager;
+  }
+
+  private String getTimestamp() {
+    return new SimpleDateFormat("HH:mm dd.MM.yyyy").format(new Date());
+  }
+
+  private void saveHistoryToFile(LinkedList<History> list) {
+    Log.i(LOG_TAG, "saveHistoryToFile: " + list);
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
+        try (
+            FileOutputStream fos = getApplicationContext().openFileOutput(FILE_NAME_HISTORY, Context.MODE_PRIVATE);
+            ObjectOutputStream os = new ObjectOutputStream(fos)) {
+          os.writeObject(list);
+        } catch (IOException e) {
+          Log.w(LOG_TAG, "Failed to save list to file: ", e);
+        }
+      }
+    }).start();
   }
 }

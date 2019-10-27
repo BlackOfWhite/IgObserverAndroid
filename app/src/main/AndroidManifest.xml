@@ -3,7 +3,7 @@
   package="org.ig.observer.pniewinski">
 
   <uses-permission android:name="android.permission.INTERNET"/>
-  <uses-permission android:name="android.permission.VIBRATE" />
+  <uses-permission android:name="android.permission.VIBRATE"/>
 
   <application
     android:allowBackup="true"
@@ -40,6 +40,14 @@
     <activity
       android:label="@string/title_activity_settings"
       android:name=".activities.UserSettingsActivity"
+      android:parentActivityName=".activities.MainActivity">
+      <meta-data
+        android:name="android.support.PARENT_ACTIVITY"
+        android:value="org.ig.observer.pniewinski.activities.MainActivity"/>
+    </activity>
+    <activity
+      android:label="@string/title_activity_history"
+      android:name=".activities.HistoryActivity"
       android:parentActivityName=".activities.MainActivity">
       <meta-data
         android:name="android.support.PARENT_ACTIVITY"

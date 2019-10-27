@@ -1,31 +1,8 @@
 <resources>
   <string name="app_name">Ig Observer</string>
 
-  <string name="new_post">%s has just added a new post.</string>
-  <string name="removed_post">%s has just removed a post.</string>
-
-  <string name="new_follower">%s has %d new follower(s). Total: %d.</string>
-  <string name="lost_follower">%s has just lost %d follower(s). Total: %d.</string>
-
-  <string name="bio_changed">%s has just changed his biography.</string>
-
-  <string name="new_post_comment">%s has just received a new comment from %s.</string>
-  <string name="lost_post_comment">%s has just lost a comment from %s.</string>
-
-  <string name="profile_picture_changed">%s has just changed his profile picture.</string>
-
-  <string name="change_to_private">% has just changed his account to private.</string>
-  <string name="change_to_private_i">Unfortunately, from now on you will only able to observe %s\'s number of followers, biography and profile picture.</string>
-  <string name="change_to_public">% has just changed his account to public.</string>
-  <string name="change_to_public_i">Great, from now on you will able to access all features of IgObserver.</string>
-
-  <string name="new_story">% has just added a new story.</string>
-  <string name="blocked_story">Attempted to view %s stories, but failed. It is possible that you have been blocked by this person.</string>
-
-  <!-- Settings -->
-  <string name="s_story">Viewing Instagram stories requires user to be signed in, therefore if you want to access this feature we suggest you to use built-in login functionality.
-   You will be informed as soon as observed person adds new story. Moreover, you can also view their stories without being displayed on list of users who viewed it!</string>
   <string name="title_activity_settings">Settings</string>
+  <string name="title_activity_history">History</string>
 
   <!-- Strings related to Settings -->
   <string name="action_settings">Settings</string>
