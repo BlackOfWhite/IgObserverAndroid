@@ -9,6 +9,7 @@ import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOT
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_PICTURE;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_POSTS;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.PREFERENCE_SEPARATOR;
+import static org.ig.observer.pniewinski.io.FileManager.loadCookieFromFile;
 import static org.ig.observer.pniewinski.io.FileManager.loadUsersFromFile;
 
 import android.app.IntentService;
@@ -32,6 +33,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.ig.observer.pniewinski.R;
 import org.ig.observer.pniewinski.activities.MainActivity;
+import org.ig.observer.pniewinski.exceptions.ConnectionError;
 import org.ig.observer.pniewinski.exceptions.UserRemovedError;
 import org.ig.observer.pniewinski.model.User;
 import org.ig.observer.pniewinski.network.NetworkProcessor;
@@ -51,22 +53,24 @@ public class IgService extends IntentService {
     // Do the task here
     Log.i(LOG_TAG, "Starting IgService service run");
     preferences = PreferenceManager.getDefaultSharedPreferences(this);
+    final String cookie = loadCookieFromFile(this);
+    Log.i(LOG_TAG, "getCookie: " + cookie);
     Log.i(LOG_TAG, "allPreferences: " + preferences.getAll());
     CopyOnWriteArrayList<User> users = loadUsersFromFile(getApplicationContext());
     Log.i(LOG_TAG, "onHandleIntent::userList: " + users);
     if (users != null && !users.isEmpty()) {
-      processUsers(users);
+      processUsers(users, cookie);
     }
   }
 
-  private void processUsers(List<User> userList) {
+  private void processUsers(List<User> userList, final String cookie) {
     NetworkProcessor networkProcessor = new NetworkProcessor();
     CopyOnWriteArrayList<User> newUserList = new CopyOnWriteArrayList<>();
     Map<User, String> userNotificationMessages = new HashMap<>();
     // Get notification settings
     for (User user : userList) {
       try {
-        User newUser = networkProcessor.getUser(user.getName());
+        User newUser = networkProcessor.getUser(user.getName(), cookie);
         // force notification, test purposes
 //        newUser.setBiography(user.getBiography() + " test");
         if (!user.equals(newUser)) {
@@ -87,16 +91,24 @@ public class IgService extends IntentService {
         Log.w(LOG_TAG, "User probably removed his/her account!", e);
         userNotificationMessages.put(user, "User has probably removed his/her account!");
       } catch (Exception e) {
+        if (e instanceof ConnectionError) {
+          if (((ConnectionError) e).getHttpCode() == 302) {
+            // Clear notifications
+            userNotificationMessages.clear();
+            userNotificationMessages.put(new User(1L, "Your session has just ended", ""), "Please log in.");
+            break;
+          }
+        }
         Log.w(LOG_TAG, "Exception while fetching data for user:: " + user.getName(), e);
         newUserList.add(user);
         continue;
       }
-//      try {
-//        // Some delay to avoid being redirected
-//        Thread.sleep(1L * 60_000L);
-//      } catch (InterruptedException e) {
-//        Log.e(LOG_TAG, "Interrupted IgService!", e);
-//      }
+      try {
+        // Some delay to avoid being treated as DDOS
+        Thread.sleep(1_000L);
+      } catch (InterruptedException e) {
+        Log.e(LOG_TAG, "Interrupted IgService!", e);
+      }
     }
     if (userList.size() != newUserList.size()) {
       Log.i(LOG_TAG,

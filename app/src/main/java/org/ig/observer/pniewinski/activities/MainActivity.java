@@ -1,10 +1,13 @@
 package org.ig.observer.pniewinski.activities;
 
 import static org.ig.observer.pniewinski.SnackbarUtils.networkNotFoundSnackbar;
+import static org.ig.observer.pniewinski.SnackbarUtils.sessionEndSnackbar;
 import static org.ig.observer.pniewinski.SnackbarUtils.snackbar;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.SELECTED_USER_NAME;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.SELECTED_USER_POSITION;
+import static org.ig.observer.pniewinski.io.FileManager.FILE_NAME_COOKIE;
 import static org.ig.observer.pniewinski.io.FileManager.FILE_NAME_USERS;
+import static org.ig.observer.pniewinski.io.FileManager.loadCookieFromFile;
 import static org.ig.observer.pniewinski.io.FileManager.loadUsersFromFile;
 
 import android.app.AlarmManager;
@@ -39,13 +42,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.ig.observer.pniewinski.IgListAdapter;
 import org.ig.observer.pniewinski.R;
+import org.ig.observer.pniewinski.auth.AuthenticationDialog;
+import org.ig.observer.pniewinski.auth.AuthenticationListener;
+import org.ig.observer.pniewinski.exceptions.ConnectionError;
 import org.ig.observer.pniewinski.exceptions.NetworkNotFound;
 import org.ig.observer.pniewinski.exceptions.UserNotFoundException;
 import org.ig.observer.pniewinski.model.User;
 import org.ig.observer.pniewinski.network.NetworkProcessor;
 import org.ig.observer.pniewinski.service.AlarmReceiver;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AuthenticationListener {
 
   public static final String LOG_TAG = "IG_TAG";
   private static final Long SERVICE_INTERVAL = 10 * 60_000L; // 10min
@@ -57,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
   private Context context;
   private NetworkProcessor networkProcessor;
   private BroadcastReceiver broadcastReceiver; // receive events from IgService
+  private volatile String cookie; // auth
 
   // Create an action bar button
   @Override
@@ -71,6 +78,9 @@ public class MainActivity extends AppCompatActivity {
     if (id == R.id.action_settings) {
       Intent intent = new Intent(this, SettingsActivity.class);
       this.startActivity(intent);
+    } else if (id == R.id.button_login) {
+      AuthenticationDialog authenticationDialog = new AuthenticationDialog(this);
+      authenticationDialog.show();
     }
     return super.onOptionsItemSelected(item);
   }
@@ -129,8 +139,12 @@ public class MainActivity extends AppCompatActivity {
     this.broadcastReceiver = new BroadcastReceiver() {
       @Override
       public void onReceive(Context context, Intent intent) {
-        CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<>((ArrayList<User>) intent.getSerializableExtra("user_list"));
-        leftJoinUserList(users);
+        if (intent.getAction().equals("ig_broadcast_session_end")) {
+          sessionEndSnackbar(listView);
+        } else if (intent.getAction().equals("ig_broadcast_intent")) {
+          CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<>((ArrayList<User>) intent.getSerializableExtra("user_list"));
+          leftJoinUserList(users);
+        }
       }
     };
     registerReceiver(broadcastReceiver, new IntentFilter("ig_broadcast_intent"));
@@ -201,13 +215,16 @@ public class MainActivity extends AppCompatActivity {
       @Override
       public void run() {
         try {
-          User user = networkProcessor.getUser(userName);
+          final String cookie = loadCookieFromFile(context);
+          User user = networkProcessor.getUser(userName, cookie);
           addUserToList(user);
           snackbar(listView, "You are now observing user: " + userName);
         } catch (UserNotFoundException e) {
           snackbar(listView, "User " + userName + " was not found");
         } catch (NetworkNotFound e) {
           networkNotFoundSnackbar(listView);
+        } catch (ConnectionError connectionError) {
+          sessionEndSnackbar(listView);
         }
       }
     });
@@ -257,10 +274,40 @@ public class MainActivity extends AppCompatActivity {
     });
   }
 
+  public void saveCookieToFile(String cookie) {
+    Log.i(LOG_TAG, "saveToCookieFile: " + cookie);
+    fileIOExecutor.submit(new Runnable() {
+      @Override
+      public void run() {
+        try (
+            FileOutputStream fos = context.openFileOutput(FILE_NAME_COOKIE, Context.MODE_PRIVATE);
+            ObjectOutputStream os = new ObjectOutputStream(fos)) {
+          os.writeObject(cookie);
+        } catch (IOException e) {
+          Log.w(LOG_TAG, "Failed to save cookie to file: ", e);
+        }
+      }
+    });
+  }
+
   /**
    * Only development purposes.
    */
   private void clearStorage() {
     saveToFile(new CopyOnWriteArrayList<>());
+  }
+
+  @Override
+  public void onLoginSuccessful(String cookie) {
+    Log.i(LOG_TAG, "New cookie found: " + cookie);
+
+    if (cookie != null) {
+      if (!cookie.equals(this.cookie)) {
+        snackbar(listView, "Successfully logged in");
+        saveCookieToFile(cookie);
+      } else {
+        snackbar(listView, "Already logged in");
+      }
+    }
   }
 }

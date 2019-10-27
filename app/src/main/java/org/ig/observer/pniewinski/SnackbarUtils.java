@@ -13,4 +13,8 @@ public class SnackbarUtils {
   public static void networkNotFoundSnackbar(View view) {
     snackbar(view, "No internet connection");
   }
+
+  public static void sessionEndSnackbar(View view) {
+    snackbar(view, "Your session has ended. Please log in.");
+  }
 }

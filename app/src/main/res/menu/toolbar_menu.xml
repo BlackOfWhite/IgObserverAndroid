@@ -2,6 +2,19 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:app="http://schemas.android.com/apk/res-auto">
   <item
+    android:title="Log in"
+    app:showAsAction="always"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Log in"
+    android:id="@+id/button_login"
+    android:layout_marginTop="140dp"
+    android:textAllCaps="false"
+    android:background="@android:color/transparent"
+    android:layout_centerHorizontal="true"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"/>
+  <item
     android:id="@+id/action_settings"
     android:icon="@drawable/ic_more_vert_black_24dp"
     app:showAsAction="ifRoom"

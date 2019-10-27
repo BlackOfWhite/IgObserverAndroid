@@ -65,20 +65,22 @@ public class NetworkProcessor {
     }
   }
 
-  public User getUser(String userName) throws UserNotFoundException, NetworkNotFound {
+  public User getUser(String userName, String cookie) throws UserNotFoundException, NetworkNotFound, ConnectionError {
     try {
-      User jsonUser = getUserFromJson(userName);
+      User jsonUser = getUserFromJson(userName, cookie);
       Log.i(LOG_TAG, "Json user: " + jsonUser);
       return jsonUser;
+    } catch (ConnectionError e) {
+      throw e;
     } catch (Exception e) {
       Log.i(LOG_TAG, "Failed to fetch data for user: " + userName + ". Attempt to scrap html page.");
-      return getUserFromHtml(userName);
+      return getUserFromHtml(userName, cookie);
     }
   }
 
-  private User getUserFromJson(String userName) throws NetworkNotFound, UserNotFoundException {
+  private User getUserFromJson(String userName, String cookie) throws NetworkNotFound, UserNotFoundException, ConnectionError {
     try {
-      final String json = sendGET("https://www.instagram.com/" + userName + "/?__a=1");
+      final String json = sendGET("https://www.instagram.com/" + userName + "/?__a=1", cookie);
       JsonNode jsonNode = OBJECT_MAPPER.readTree(json).get("graphql").get("user");
       Long id = Long.parseLong(jsonNode.get("id").getTextValue());
       Long follows = jsonNode.get("edge_follow").get("count").getLongValue();
@@ -88,7 +90,7 @@ public class NetworkProcessor {
       Boolean is_private = jsonNode.get("is_private").getBooleanValue();
       String img_url = jsonNode.get("profile_pic_url").getTextValue();
       if (id != null) {
-        Boolean has_stories = hasPublicStories(id);
+        Boolean has_stories = hasPublicStories(id, cookie);
         return new User(id, userName, img_url, post_count, follows, followed_by, biography, is_private, has_stories);
       } else {
         Log.w(LOG_TAG, "getUser: " + userName + ", no patterns found in response");
@@ -97,17 +99,19 @@ public class NetworkProcessor {
     } catch (UnknownHostException e) {
       Log.w(LOG_TAG, "getUser: " + userName, e);
       throw new NetworkNotFound();
+    } catch (ConnectionError e) {
+      throw e;
     } catch (Exception e) {
       Log.w(LOG_TAG, "getUser: " + userName, e);
       throw new UserNotFoundException(userName);
     }
   }
 
-  private User getUserFromHtml(String userName) throws NetworkNotFound, UserNotFoundException {
+  private User getUserFromHtml(String userName, String cookie) throws NetworkNotFound, UserNotFoundException {
     String url = String.format(USER_FEED_URL, userName);
     String content = null;
     try {
-      content = sendGET(url);
+      content = sendGET(url, cookie);
     } catch (UnknownHostException e) {
       Log.w(LOG_TAG, "getUser: " + userName, e);
       throw new NetworkNotFound();
@@ -124,7 +128,7 @@ public class NetworkProcessor {
     String biography = parseString(getMatch(match, USER_BIOGRAPHY_PATTERN), "\"", 3, 0);
     Long post_count = parseLong(getMatch(match, USER_POSTS_COUNT_PATTERN), ":", 2);
     Boolean is_private = parseBoolean(getMatch(match, IS_PRIVATE_PATTERN), ":", 1);
-    Boolean has_stories = hasPublicStories(id);
+    Boolean has_stories = hasPublicStories(id, cookie);
     if (id != null) {
       String img_url = parseString(getMatch(content, PROFILE_IMG_URL_PATTERN), "\"", 3, 0);
       return new User(id, userName, img_url, post_count, follows, followed_by, biography, is_private, has_stories);
@@ -134,7 +138,8 @@ public class NetworkProcessor {
     }
   }
 
-  private String sendGET(String url) throws IOException, ConnectionError {
+  private String sendGET(String url, String cookie) throws IOException, ConnectionError {
+    Log.i(LOG_TAG, "Sending GET request for URL: " + url + "\nCookie: " + cookie);
     StringBuilder stringBuilder = new StringBuilder();
     HttpsURLConnection sslConnection;
 
@@ -143,6 +148,9 @@ public class NetworkProcessor {
     if (sslConnection == null) {
       Log.i(LOG_TAG, "Failed to open HTTPS connection.");
       throw new ConnectionError(0);
+    }
+    if (cookie != null) {
+      sslConnection.setRequestProperty("cookie", cookie);
     }
     sslConnection.setInstanceFollowRedirects(false);
     sslConnection.connect();
@@ -154,9 +162,7 @@ public class NetworkProcessor {
       Log.i(LOG_TAG, url + " :: Got redirect response code: " + responseCode + ", response message: " + sslConnection.getResponseMessage());
       throw new ConnectionError(responseCode);
     }
-    try (BufferedReader br =
-        new BufferedReader(
-            new InputStreamReader(sslConnection.getInputStream()))) {
+    try (BufferedReader br = new BufferedReader(new InputStreamReader(sslConnection.getInputStream()))) {
       String next;
       while ((next = br.readLine()) != null) {
         stringBuilder.append(next);
@@ -217,13 +223,13 @@ public class NetworkProcessor {
     return stringBuilder.toString();
   }
 
-  private boolean hasPublicStories(Long userId) {
+  private boolean hasPublicStories(Long userId, String cookie) {
     String url = "https://www.instagram.com/graphql/query/?query_hash=aec5501414615eca36a9acf075655b1e"
         + "&variables={\"user_id\":\"" + userId + "\","
         + "\"include_reel\":true,"
         + "\"include_logged_out_extras\":true}";
     try {
-      String json = sendGET(url);
+      String json = sendGET(url, cookie);
       if (json.contains("has_public_story\":true")) {
         return true;
       }
@@ -241,5 +247,4 @@ public class NetworkProcessor {
     //https://www.instagram.com/graphql/query/?query_hash=5da4b106f3e821421ea90356bb98d226&variables={"reel_ids":["13008672336"],"precomposed_overlay":false,"story_viewer_fetch_count":50}
     return null;
   }
-
 }

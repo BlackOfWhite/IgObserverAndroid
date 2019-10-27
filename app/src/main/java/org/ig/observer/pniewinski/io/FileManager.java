@@ -14,7 +14,7 @@ import org.ig.observer.pniewinski.model.User;
 public class FileManager {
 
   public static final String FILE_NAME_USERS = "ig_observer_storage";
-  public static final String FILE_NAME_AUTH = "ig_observer_storage_auth";
+  public static final String FILE_NAME_COOKIE = "ig_observer_storage_auth";
 
   public static CopyOnWriteArrayList<User> loadUsersFromFile(Context context) {
     try (
@@ -31,5 +31,22 @@ public class FileManager {
       Log.w(LOG_TAG, "Failed to load list from file. Unexpected exception: ", e);
     }
     return new CopyOnWriteArrayList<>();
+  }
+
+  public static String loadCookieFromFile(Context context) {
+    try (
+        FileInputStream fis = context.openFileInput(FILE_NAME_COOKIE);
+        ObjectInputStream is = new ObjectInputStream(fis)) {
+      String cookie = (String) is.readObject();
+      Log.i(LOG_TAG, "loadedCookieFromFile: " + cookie);
+      return cookie;
+    } catch (FileNotFoundException e) {
+      Log.w(LOG_TAG, "Failed to find file: ", e);
+    } catch (IOException | ClassNotFoundException e) {
+      Log.w(LOG_TAG, "Failed to load list from file: ", e);
+    } catch (Exception e) {
+      Log.w(LOG_TAG, "Failed to load list from file. Unexpected exception: ", e);
+    }
+    return null;
   }
 }
