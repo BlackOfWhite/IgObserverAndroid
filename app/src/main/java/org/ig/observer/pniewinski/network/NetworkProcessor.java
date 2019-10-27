@@ -20,6 +20,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.regex.Pattern;
 import javax.net.ssl.HttpsURLConnection;
@@ -234,18 +235,11 @@ public class NetworkProcessor {
   }
 
   /**
-   * Example: https://api.instagram.com/v1/self/media/recent?access_token=3032831214.9a02a8e.e506af4ba168404e9feab0275f8babc1
+   * https://www.instagram.com/graphql/query/?query_hash=5da4b106f3e821421ea90356bb98d226&variables={"reel_ids":["13008672336"],"precomposed_overlay":false,"story_viewer_fetch_count":50}
    */
-//  public String getUserName(Auth auth) throws IOException {
-//    String url = "https://graph.instagram.com/" + auth.getUser_id()
-//        + "?fields=username&access_token=" + auth.getAccess_token();
-//    final ObjectNode node = new ObjectMapper().readValue(new URL(url), ObjectNode.class);
-//    if (node.has("username")) {
-//      String username = node.get("username").getTextValue();
-//      Log.i(LOG_TAG, "User name: " + username);
-//      return username;
-//    }
-//    return "";
-//  }
+  private ArrayList<String> getUserStoriesUrls() {
+    //https://www.instagram.com/graphql/query/?query_hash=5da4b106f3e821421ea90356bb98d226&variables={"reel_ids":["13008672336"],"precomposed_overlay":false,"story_viewer_fetch_count":50}
+    return null;
+  }
 
 }

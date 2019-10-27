@@ -70,7 +70,7 @@ public class IgListAdapter extends ArrayAdapter {
 
     // Main section
     final User user = users.get(position);
-    nameTextField.setText(user.getName());
+    nameTextField.setText(user.getName() + (user.getIs_private() ? getFormattedText(" \\uD83D\\uDD12") : ""));
     infoTextField.setText(user.getInfo());
     loadAsyncImage(imageView, user);
     // Biography & bold and formatted text
@@ -80,6 +80,24 @@ public class IgListAdapter extends ArrayAdapter {
     sb.setSpan(BOLD_STYLE, 0, "Biography:".length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
     biographyTextView.setText(sb);
     return rowView;
+  }
+
+  public List<User> leftJoinItems(List<User> list) {
+    List<User> finaList = new CopyOnWriteArrayList<>();
+    for (User user : users) {
+      finaList.add(leftJoinItem(user, list));
+    }
+    refreshItems(finaList);
+    return finaList;
+  }
+
+  private User leftJoinItem(User leftItem, List<User> right) {
+    for (User i : right) {
+      if (i.getId().equals(leftItem.getId())) {
+        return i;
+      }
+    }
+    return leftItem;
   }
 
   public void refreshItems(List<User> list) {

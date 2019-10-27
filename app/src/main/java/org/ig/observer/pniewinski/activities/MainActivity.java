@@ -48,7 +48,7 @@ import org.ig.observer.pniewinski.service.AlarmReceiver;
 public class MainActivity extends AppCompatActivity {
 
   public static final String LOG_TAG = "IG_TAG";
-  private static final Long SERVICE_INTERVAL = 5 * 60_000L; // 5min
+  private static final Long SERVICE_INTERVAL = 10 * 60_000L; // 10min
   private static final int MAX_OBSERVED = 10;
   private ExecutorService networkExecutor = Executors.newSingleThreadExecutor();
   private ExecutorService fileIOExecutor = Executors.newSingleThreadExecutor();
@@ -64,7 +64,6 @@ public class MainActivity extends AppCompatActivity {
     getMenuInflater().inflate(R.menu.toolbar_menu, menu);
     return super.onCreateOptionsMenu(menu);
   }
-
 
   @Override
   public boolean onOptionsItemSelected(MenuItem item) {
@@ -131,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
       @Override
       public void onReceive(Context context, Intent intent) {
         CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<>((ArrayList<User>) intent.getSerializableExtra("user_list"));
-        updateUsersList(users);
+        leftJoinUserList(users);
       }
     };
     registerReceiver(broadcastReceiver, new IntentFilter("ig_broadcast_intent"));
@@ -235,10 +234,10 @@ public class MainActivity extends AppCompatActivity {
   /**
    * Used only from IgService
    */
-  private void updateUsersList(List<User> newUsers) {
-//    Log.i(LOG_TAG, "updateUsersList: " + users);
-    adapter.refreshItems(newUsers);
-    saveToFile(newUsers);
+  private void leftJoinUserList(List<User> newUsers) {
+//    Log.i(LOG_TAG, "leftJoinUserList: " + users);
+    List<User> finalList = adapter.leftJoinItems(newUsers);
+    saveToFile(finalList);
   }
 
 
