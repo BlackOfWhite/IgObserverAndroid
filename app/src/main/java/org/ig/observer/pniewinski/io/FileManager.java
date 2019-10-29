@@ -17,6 +17,7 @@ public class FileManager {
 
   public static final String FILE_NAME_USERS = "ig_observer_storage";
   public static final String FILE_NAME_COOKIE = "ig_observer_storage_auth";
+  public static final String FILE_NAME_TIMESTAMP = "ig_observer_storage_timestamp";
   public static final String FILE_NAME_HISTORY = "ig_observer_storage_history";
 
   public static CopyOnWriteArrayList<User> loadUsersFromFile(Context context) {
@@ -41,7 +42,7 @@ public class FileManager {
         FileInputStream fis = context.openFileInput(FILE_NAME_HISTORY);
         ObjectInputStream is = new ObjectInputStream(fis)) {
       LinkedList<History> histories = (LinkedList<History>) is.readObject();
-      Log.i(LOG_TAG, "loadedHistoryFromFile: " + histories);
+//      Log.i(LOG_TAG, "loadedHistoryFromFile: " + histories);
       return histories;
     } catch (FileNotFoundException e) {
       Log.w(LOG_TAG, "Failed to find file: ", e);
@@ -60,6 +61,23 @@ public class FileManager {
       String cookie = (String) is.readObject();
       Log.i(LOG_TAG, "loadedCookieFromFile: " + cookie);
       return cookie;
+    } catch (FileNotFoundException e) {
+      Log.w(LOG_TAG, "Failed to find file: ", e);
+    } catch (IOException | ClassNotFoundException e) {
+      Log.w(LOG_TAG, "Failed to load list from file: ", e);
+    } catch (Exception e) {
+      Log.w(LOG_TAG, "Failed to load list from file. Unexpected exception: ", e);
+    }
+    return null;
+  }
+
+  public static Long loadTimestampFromFile(Context context) {
+    try (
+        FileInputStream fis = context.openFileInput(FILE_NAME_TIMESTAMP);
+        ObjectInputStream is = new ObjectInputStream(fis)) {
+      Long timestamp = (Long) is.readObject();
+      Log.i(LOG_TAG, "loadedTimestampFromFile: " + timestamp);
+      return timestamp;
     } catch (FileNotFoundException e) {
       Log.w(LOG_TAG, "Failed to find file: ", e);
     } catch (IOException | ClassNotFoundException e) {

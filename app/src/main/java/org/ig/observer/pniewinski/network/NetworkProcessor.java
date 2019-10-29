@@ -157,6 +157,9 @@ public class NetworkProcessor {
     int responseCode = sslConnection.getResponseCode();
     if (responseCode >= 400) {
       Log.i(LOG_TAG, "Got invalid response code: " + responseCode + ", response message: " + sslConnection.getResponseMessage());
+      if (responseCode == 429) {
+        Log.i(LOG_TAG, sslConnection.getHeaderFields().toString());
+      }
       throw new ConnectionError(responseCode);
     } else if (responseCode >= 300) {
       Log.i(LOG_TAG, url + " :: Got redirect response code: " + responseCode + ", response message: " + sslConnection.getResponseMessage());

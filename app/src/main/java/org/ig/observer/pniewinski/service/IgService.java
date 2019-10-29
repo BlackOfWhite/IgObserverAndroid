@@ -1,6 +1,7 @@
 package org.ig.observer.pniewinski.service;
 
 import static org.ig.observer.pniewinski.activities.MainActivity.LOG_TAG;
+import static org.ig.observer.pniewinski.activities.MainActivity.SERVICE_INTERVAL;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_ACCOUNT_STATUS;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_BIOGRAPHY;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_FOLLOWED_BY;
@@ -10,8 +11,10 @@ import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOT
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_POSTS;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.PREFERENCE_SEPARATOR;
 import static org.ig.observer.pniewinski.io.FileManager.FILE_NAME_HISTORY;
+import static org.ig.observer.pniewinski.io.FileManager.FILE_NAME_TIMESTAMP;
 import static org.ig.observer.pniewinski.io.FileManager.loadCookieFromFile;
 import static org.ig.observer.pniewinski.io.FileManager.loadHistoryFromFile;
+import static org.ig.observer.pniewinski.io.FileManager.loadTimestampFromFile;
 import static org.ig.observer.pniewinski.io.FileManager.loadUsersFromFile;
 
 import android.app.IntentService;
@@ -66,6 +69,16 @@ public class IgService extends IntentService {
   protected void onHandleIntent(Intent intent) {
     // Do the task here
     Log.i(LOG_TAG, "Starting IgService service run");
+    // Check last service run
+    Long lastTimestamp = loadTimestampFromFile(this);
+    final long newTimestamp = System.currentTimeMillis();
+    if (lastTimestamp != null && newTimestamp - lastTimestamp <= SERVICE_INTERVAL) {
+      Log.i(LOG_TAG, "Tried to run service before interval has passed.");
+      return;
+    } else {
+      saveTimestampToFile(newTimestamp);
+    }
+    // Logic
     preferences = PreferenceManager.getDefaultSharedPreferences(this);
     final String cookie = loadCookieFromFile(this);
     Log.i(LOG_TAG, "getCookie: " + cookie);
@@ -284,6 +297,22 @@ public class IgService extends IntentService {
           os.writeObject(list);
         } catch (IOException e) {
           Log.w(LOG_TAG, "Failed to save list to file: ", e);
+        }
+      }
+    }).start();
+  }
+
+  private void saveTimestampToFile(Long timestamp) {
+    Log.i(LOG_TAG, "saveTimestampToFile: " + timestamp);
+    new Thread(new Runnable() {
+      @Override
+      public void run() {
+        try (
+            FileOutputStream fos = getApplicationContext().openFileOutput(FILE_NAME_TIMESTAMP, Context.MODE_PRIVATE);
+            ObjectOutputStream os = new ObjectOutputStream(fos)) {
+          os.writeObject(timestamp);
+        } catch (IOException e) {
+          Log.w(LOG_TAG, "Failed to save timestamp to file: ", e);
         }
       }
     }).start();

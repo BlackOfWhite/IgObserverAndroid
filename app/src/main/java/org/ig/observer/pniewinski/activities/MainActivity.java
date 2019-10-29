@@ -40,8 +40,8 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.ig.observer.pniewinski.adapters.IgListAdapter;
 import org.ig.observer.pniewinski.R;
+import org.ig.observer.pniewinski.adapters.IgListAdapter;
 import org.ig.observer.pniewinski.auth.AuthenticationDialog;
 import org.ig.observer.pniewinski.auth.AuthenticationListener;
 import org.ig.observer.pniewinski.exceptions.ConnectionError;
@@ -54,7 +54,7 @@ import org.ig.observer.pniewinski.service.AlarmReceiver;
 public class MainActivity extends AppCompatActivity implements AuthenticationListener {
 
   public static final String LOG_TAG = "IG_TAG";
-  private static final Long SERVICE_INTERVAL = 10 * 60_000L; // 10min
+  public static final Long SERVICE_INTERVAL = 10 * 60_000L; // 10min
   private static final int MAX_OBSERVED = 10;
   private ExecutorService networkExecutor = Executors.newSingleThreadExecutor();
   private ExecutorService fileIOExecutor = Executors.newSingleThreadExecutor();
