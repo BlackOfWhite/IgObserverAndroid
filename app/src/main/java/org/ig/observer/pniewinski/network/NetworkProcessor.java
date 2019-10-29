@@ -71,6 +71,10 @@ public class NetworkProcessor {
       Log.i(LOG_TAG, "Json user: " + jsonUser);
       return jsonUser;
     } catch (ConnectionError e) {
+      if (e.getHttpCode() == 404) {
+        Log.w(LOG_TAG, "getUser: " + userName, e);
+        throw new UserNotFoundException(userName);
+      }
       throw e;
     } catch (Exception e) {
       Log.i(LOG_TAG, "Failed to fetch data for user: " + userName + ". Attempt to scrap html page.");
