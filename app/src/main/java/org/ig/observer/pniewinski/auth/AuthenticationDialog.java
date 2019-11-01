@@ -23,19 +23,33 @@ public class AuthenticationDialog extends Dialog {
       return false;
     }
 
+    /**
+     * Valid session cookie example:
+     * ig_cb=1; mid=XbxlnAABAAEDuolWUDSpIBpzzKi3; csrftoken=XXKkF3KINFtScwsaLQ6cCjYUfhyDfL5h;
+     * shbid=10136; shbts=1572627883.9795897; ds_user_id=3032831214; sessionid=3032831214%3Awbf0jKOEOJEX9S%3A29;
+     * rur=ASH; urlgen="{\"109.231.5.46\": 34525}:1iQaLx:n72ZqSIiBdsSMXXxJA3Ec9FZbJU"
+     * @param view
+     * @param url
+     */
     @Override
     public void onPageFinished(WebView view, String url) {
       super.onPageFinished(view, url);
       Log.i(LOG_TAG, "onPageFinished: " + url);
       if (url.equals("https://www.instagram.com/")) {
-        new Thread(new Runnable() {
-          @Override
-          public void run() {
-            String cookie = CookieManager.getInstance().getCookie("https://www.instagram.com");
-            listener.onLoginSuccessful(cookie);
-          }
-        }).start();
+        String cookie = CookieManager.getInstance().getCookie("https://www.instagram.com");
+        if (cookie.contains("ds_user_id") && cookie.contains("sessionid")) {
+          new Thread(new Runnable() {
+            @Override
+            public void run() {
+              listener.onLoginSuccessful(cookie);
+            }
+          }).start();
+        }
         findViewById(R.id.auth_dialog).setVisibility(View.GONE);
+        return;
+      } else if (url.contains("error=access_denied")) {
+        findViewById(R.id.auth_dialog).setVisibility(View.GONE);
+        return;
       }
     }
   };

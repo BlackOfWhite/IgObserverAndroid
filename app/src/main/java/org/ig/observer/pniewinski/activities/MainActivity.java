@@ -9,6 +9,7 @@ import static org.ig.observer.pniewinski.io.FileManager.FILE_NAME_COOKIE;
 import static org.ig.observer.pniewinski.io.FileManager.FILE_NAME_USERS;
 import static org.ig.observer.pniewinski.io.FileManager.loadCookieFromFile;
 import static org.ig.observer.pniewinski.io.FileManager.loadUsersFromFile;
+import static org.ig.observer.pniewinski.network.NetworkProcessor.clearCookies;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -55,7 +56,9 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
 
   public static final String LOG_TAG = "IG_TAG";
   public static final Long SERVICE_INTERVAL = 10 * 60_000L; // 10min
+  public static final String IG_BROADCAST_LIST_UPDATE = "ig_broadcast_list_update";
   private static final int MAX_OBSERVED = 10;
+  private static final String IG_BROADCAST_SESSION_END = "ig_broadcast_session_end";
   private ExecutorService networkExecutor = Executors.newSingleThreadExecutor();
   private ExecutorService fileIOExecutor = Executors.newSingleThreadExecutor();
   private ListView listView;
@@ -63,12 +66,17 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
   private Context context;
   private NetworkProcessor networkProcessor;
   private BroadcastReceiver broadcastReceiver; // receive events from IgService
-  private volatile String cookie; // auth
+  private MenuItem logInItem;
 
   // Create an action bar button
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
     getMenuInflater().inflate(R.menu.toolbar_menu, menu);
+    // Login button
+    if (loadCookieFromFile(this) != null) {
+      logInItem = menu.findItem(R.id.button_login);
+      logInItem.setTitle(R.string.app_log_out);
+    }
     return super.onCreateOptionsMenu(menu);
   }
 
@@ -82,8 +90,14 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
       Intent intent = new Intent(this, HistoryActivity.class);
       this.startActivity(intent);
     } else if (id == R.id.button_login) {
-      AuthenticationDialog authenticationDialog = new AuthenticationDialog(this);
-      authenticationDialog.show();
+      if (null != loadCookieFromFile(this)) {
+        // Log out
+        signOut();
+      } else {
+        // Log in
+        AuthenticationDialog authenticationDialog = new AuthenticationDialog(this);
+        authenticationDialog.show();
+      }
     }
     return super.onOptionsItemSelected(item);
   }
@@ -96,6 +110,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     // Adapter
     CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<>(loadUsersFromFile(context));
     this.networkProcessor = new NetworkProcessor();
+    // List
     adapter = new IgListAdapter(this, users);
     listView = (ListView) findViewById(R.id.list_view);
     listView.setAdapter(adapter);
@@ -142,15 +157,17 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     this.broadcastReceiver = new BroadcastReceiver() {
       @Override
       public void onReceive(Context context, Intent intent) {
-        if (intent.getAction().equals("ig_broadcast_session_end")) {
+        if (intent.getAction().equals(IG_BROADCAST_SESSION_END)) {
+          signOut();
           sessionEndSnackbar(listView);
-        } else if (intent.getAction().equals("ig_broadcast_intent")) {
+        } else if (intent.getAction().equals(IG_BROADCAST_LIST_UPDATE)) {
           CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<>((ArrayList<User>) intent.getSerializableExtra("user_list"));
           leftJoinUserList(users);
         }
       }
     };
-    registerReceiver(broadcastReceiver, new IntentFilter("ig_broadcast_intent"));
+    registerReceiver(broadcastReceiver, new IntentFilter(IG_BROADCAST_LIST_UPDATE));
+    registerReceiver(broadcastReceiver, new IntentFilter(IG_BROADCAST_SESSION_END));
   }
 
   @Override
@@ -158,7 +175,6 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     super.onDestroy();
     unregisterReceiver(broadcastReceiver);
   }
-
 
   // Setup a recurring alarm every half hour
   private void scheduleAlarmService() {
@@ -228,6 +244,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
           networkNotFoundSnackbar(listView);
         } catch (ConnectionError connectionError) {
           sessionEndSnackbar(listView);
+          signOut();
         }
       }
     });
@@ -259,7 +276,6 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     List<User> finalList = adapter.leftJoinItems(newUsers);
     saveToFile(finalList);
   }
-
 
   public void saveToFile(List<User> list) {
     Log.i(LOG_TAG, "saveToFile: " + list);
@@ -300,17 +316,21 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     saveToFile(new CopyOnWriteArrayList<>());
   }
 
+  private void signOut() {
+    clearCookies(this);
+    saveCookieToFile(null);
+    logInItem.setTitle(R.string.app_log_in);
+  }
+
   @Override
   public void onLoginSuccessful(String cookie) {
     Log.i(LOG_TAG, "New cookie found: " + cookie);
-
     if (cookie != null) {
-      if (!cookie.equals(this.cookie)) {
-        snackbar(listView, "Successfully logged in");
-        saveCookieToFile(cookie);
-      } else {
-        snackbar(listView, "Already logged in");
-      }
+      snackbar(listView, "Successfully logged in");
+      saveCookieToFile(cookie);
+      runOnUiThread(() -> logInItem.setTitle(R.string.app_log_out));
+    } else {
+      snackbar(listView, "Opss.. failed to log in");
     }
   }
 }

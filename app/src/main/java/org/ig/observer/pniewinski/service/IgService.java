@@ -1,5 +1,6 @@
 package org.ig.observer.pniewinski.service;
 
+import static org.ig.observer.pniewinski.activities.MainActivity.IG_BROADCAST_LIST_UPDATE;
 import static org.ig.observer.pniewinski.activities.MainActivity.LOG_TAG;
 import static org.ig.observer.pniewinski.activities.MainActivity.SERVICE_INTERVAL;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_ACCOUNT_STATUS;
@@ -124,6 +125,10 @@ public class IgService extends IntentService {
             // Clear notifications
             userNotificationMessages.clear();
             userNotificationMessages.put(new User(1L, "Your session has just ended", ""), "Please log in.");
+            sendNotifications(userNotificationMessages);
+            // Send broadcast
+            Intent intent = new Intent(IG_BROADCAST_LIST_UPDATE);
+            sendBroadcast(intent);
             break;
           }
         }
@@ -150,7 +155,7 @@ public class IgService extends IntentService {
     }
 
     // Update list used in main activity, send broadcast
-    Intent intent = new Intent("ig_broadcast_intent");
+    Intent intent = new Intent(IG_BROADCAST_LIST_UPDATE);
     intent.putExtra("user_list", newUserList);
     sendBroadcast(intent);
 
@@ -167,6 +172,10 @@ public class IgService extends IntentService {
     }
 
     // Send notifications
+    sendNotifications(userNotificationMessages);
+  }
+
+  private void sendNotifications(Map<User, String> userNotificationMessages) {
     final NotificationManager mNotificationManager = getNotificationManager();
     Log.i(LOG_TAG, "Notification massages: " + userNotificationMessages);
     for (Entry<User, String> entry : userNotificationMessages.entrySet()) {
