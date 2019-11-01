@@ -5,10 +5,10 @@ import static org.ig.observer.pniewinski.SnackbarUtils.sessionEndSnackbar;
 import static org.ig.observer.pniewinski.SnackbarUtils.snackbar;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.SELECTED_USER_NAME;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.SELECTED_USER_POSITION;
-import static org.ig.observer.pniewinski.io.FileManager.FILE_NAME_COOKIE;
-import static org.ig.observer.pniewinski.io.FileManager.FILE_NAME_USERS;
 import static org.ig.observer.pniewinski.io.FileManager.loadCookieFromFile;
 import static org.ig.observer.pniewinski.io.FileManager.loadUsersFromFile;
+import static org.ig.observer.pniewinski.io.FileManager.saveCookieToFile;
+import static org.ig.observer.pniewinski.io.FileManager.saveUsersToFile;
 import static org.ig.observer.pniewinski.network.NetworkProcessor.clearCookies;
 
 import android.app.AlarmManager;
@@ -33,9 +33,6 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.EditText;
 import android.widget.ListView;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -57,10 +54,9 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
   public static final String LOG_TAG = "IG_TAG";
   public static final Long SERVICE_INTERVAL = 10 * 60_000L; // 10min
   public static final String IG_BROADCAST_LIST_UPDATE = "ig_broadcast_list_update";
+  public static final String IG_BROADCAST_SESSION_END = "ig_broadcast_session_end";
   private static final int MAX_OBSERVED = 10;
-  private static final String IG_BROADCAST_SESSION_END = "ig_broadcast_session_end";
   private ExecutorService networkExecutor = Executors.newSingleThreadExecutor();
-  private ExecutorService fileIOExecutor = Executors.newSingleThreadExecutor();
   private ListView listView;
   private IgListAdapter adapter;
   private Context context;
@@ -184,9 +180,8 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     final PendingIntent pIntent = PendingIntent.getBroadcast(this, AlarmReceiver.REQUEST_CODE,
         intent, PendingIntent.FLAG_UPDATE_CURRENT);
     // Setup periodic alarm every every half hour from this point onwards
-    long firstMillis = System.currentTimeMillis(); // alarm is set right away
     AlarmManager alarm = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-    alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, firstMillis,
+    alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
         SERVICE_INTERVAL, pIntent); // every 5 min
   }
 
@@ -254,18 +249,18 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
    * Use from within adapter.
    */
   public void removeUserFromList(int position) {
-    List<User> list = new CopyOnWriteArrayList<>(adapter.getUserList());
+    CopyOnWriteArrayList<User> list = new CopyOnWriteArrayList<>(adapter.getUserList());
     list.remove(position);
     adapter.refreshItems(list);
-    saveToFile(list);
+    saveUsersToFile(list, context);
   }
 
   public void addUserToList(User user) {
     Log.i(LOG_TAG, "addUserToList: " + user);
-    List<User> list = new CopyOnWriteArrayList<>(adapter.getUserList());
+    CopyOnWriteArrayList<User> list = new CopyOnWriteArrayList<>(adapter.getUserList());
     list.add(user);
     adapter.refreshItems(list, list.size() == 1);
-    saveToFile(list);
+    saveUsersToFile(list, context);
   }
 
   /**
@@ -273,52 +268,20 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
    */
   private void leftJoinUserList(List<User> newUsers) {
 //    Log.i(LOG_TAG, "leftJoinUserList: " + users);
-    List<User> finalList = adapter.leftJoinItems(newUsers);
-    saveToFile(finalList);
-  }
-
-  public void saveToFile(List<User> list) {
-    Log.i(LOG_TAG, "saveToFile: " + list);
-    fileIOExecutor.submit(new Runnable() {
-      @Override
-      public void run() {
-        try (
-            FileOutputStream fos = context.openFileOutput(FILE_NAME_USERS, Context.MODE_PRIVATE);
-            ObjectOutputStream os = new ObjectOutputStream(fos)) {
-          os.writeObject(list);
-        } catch (IOException e) {
-          Log.w(LOG_TAG, "Failed to save list to file: ", e);
-        }
-      }
-    });
-  }
-
-  public void saveCookieToFile(String cookie) {
-    Log.i(LOG_TAG, "saveToCookieFile: " + cookie);
-    fileIOExecutor.submit(new Runnable() {
-      @Override
-      public void run() {
-        try (
-            FileOutputStream fos = context.openFileOutput(FILE_NAME_COOKIE, Context.MODE_PRIVATE);
-            ObjectOutputStream os = new ObjectOutputStream(fos)) {
-          os.writeObject(cookie);
-        } catch (IOException e) {
-          Log.w(LOG_TAG, "Failed to save cookie to file: ", e);
-        }
-      }
-    });
+    CopyOnWriteArrayList<User> finalList = adapter.leftJoinItems(newUsers);
+    saveUsersToFile(finalList, context);
   }
 
   /**
    * Only development purposes.
    */
   private void clearStorage() {
-    saveToFile(new CopyOnWriteArrayList<>());
+    saveUsersToFile(new CopyOnWriteArrayList<>(), context);
   }
 
   private void signOut() {
     clearCookies(this);
-    saveCookieToFile(null);
+    saveCookieToFile(null, context);
     logInItem.setTitle(R.string.app_log_in);
   }
 
@@ -327,7 +290,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     Log.i(LOG_TAG, "New cookie found: " + cookie);
     if (cookie != null) {
       snackbar(listView, "Successfully logged in");
-      saveCookieToFile(cookie);
+      saveCookieToFile(cookie, context);
       runOnUiThread(() -> logInItem.setTitle(R.string.app_log_out));
     } else {
       snackbar(listView, "Opss.. failed to log in");

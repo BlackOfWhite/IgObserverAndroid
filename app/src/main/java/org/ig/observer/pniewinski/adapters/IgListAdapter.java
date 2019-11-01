@@ -83,8 +83,8 @@ public class IgListAdapter extends ArrayAdapter {
     return rowView;
   }
 
-  public List<User> leftJoinItems(List<User> list) {
-    List<User> finaList = new CopyOnWriteArrayList<>();
+  public CopyOnWriteArrayList<User> leftJoinItems(List<User> list) {
+    CopyOnWriteArrayList<User> finaList = new CopyOnWriteArrayList<>();
     for (User user : users) {
       finaList.add(leftJoinItem(user, list));
     }

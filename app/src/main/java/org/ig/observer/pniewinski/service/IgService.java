@@ -1,6 +1,7 @@
 package org.ig.observer.pniewinski.service;
 
 import static org.ig.observer.pniewinski.activities.MainActivity.IG_BROADCAST_LIST_UPDATE;
+import static org.ig.observer.pniewinski.activities.MainActivity.IG_BROADCAST_SESSION_END;
 import static org.ig.observer.pniewinski.activities.MainActivity.LOG_TAG;
 import static org.ig.observer.pniewinski.activities.MainActivity.SERVICE_INTERVAL;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_ACCOUNT_STATUS;
@@ -11,12 +12,12 @@ import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOT
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_PICTURE;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.KEY_NOTIFICATION_POSTS;
 import static org.ig.observer.pniewinski.activities.UserSettingsActivity.PREFERENCE_SEPARATOR;
-import static org.ig.observer.pniewinski.io.FileManager.FILE_NAME_HISTORY;
-import static org.ig.observer.pniewinski.io.FileManager.FILE_NAME_TIMESTAMP;
 import static org.ig.observer.pniewinski.io.FileManager.loadCookieFromFile;
 import static org.ig.observer.pniewinski.io.FileManager.loadHistoryFromFile;
 import static org.ig.observer.pniewinski.io.FileManager.loadTimestampFromFile;
 import static org.ig.observer.pniewinski.io.FileManager.loadUsersFromFile;
+import static org.ig.observer.pniewinski.io.FileManager.saveHistoryToFile;
+import static org.ig.observer.pniewinski.io.FileManager.saveTimestampToFile;
 
 import android.app.IntentService;
 import android.app.NotificationChannel;
@@ -32,9 +33,6 @@ import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationCompat.BigTextStyle;
 import android.util.Log;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -77,8 +75,9 @@ public class IgService extends IntentService {
       Log.i(LOG_TAG, "Tried to run service before interval has passed.");
       return;
     } else {
-      saveTimestampToFile(newTimestamp);
+      saveTimestampToFile(newTimestamp, getApplicationContext());
     }
+    Log.i(LOG_TAG, "Starting IgService run. Last timestamp was: " + lastTimestamp + "\n, now is: " + newTimestamp);
     // Logic
     preferences = PreferenceManager.getDefaultSharedPreferences(this);
     final String cookie = loadCookieFromFile(this);
@@ -127,7 +126,7 @@ public class IgService extends IntentService {
             userNotificationMessages.put(new User(1L, "Your session has just ended", ""), "Please log in.");
             sendNotifications(userNotificationMessages);
             // Send broadcast
-            Intent intent = new Intent(IG_BROADCAST_LIST_UPDATE);
+            Intent intent = new Intent(IG_BROADCAST_SESSION_END);
             sendBroadcast(intent);
             break;
           }
@@ -138,7 +137,7 @@ public class IgService extends IntentService {
       }
       try {
         // Some delay to avoid being treated as DDOS
-        Thread.sleep(1_000L);
+        Thread.sleep(300L);
       } catch (InterruptedException e) {
         Log.e(LOG_TAG, "Interrupted IgService!", e);
       }
@@ -168,7 +167,7 @@ public class IgService extends IntentService {
       if (histories.size() > QUEUE_SIZE) {
         histories = new LinkedList<>(histories.subList(0, QUEUE_SIZE));
       }
-      saveHistoryToFile(histories);
+      saveHistoryToFile(histories, getApplicationContext());
     }
 
     // Send notifications
@@ -293,37 +292,5 @@ public class IgService extends IntentService {
 
   private String getTimestamp() {
     return new SimpleDateFormat("HH:mm dd.MM.yyyy").format(new Date());
-  }
-
-  private void saveHistoryToFile(LinkedList<History> list) {
-    Log.i(LOG_TAG, "saveHistoryToFile: " + list);
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-        try (
-            FileOutputStream fos = getApplicationContext().openFileOutput(FILE_NAME_HISTORY, Context.MODE_PRIVATE);
-            ObjectOutputStream os = new ObjectOutputStream(fos)) {
-          os.writeObject(list);
-        } catch (IOException e) {
-          Log.w(LOG_TAG, "Failed to save list to file: ", e);
-        }
-      }
-    }).start();
-  }
-
-  private void saveTimestampToFile(Long timestamp) {
-    Log.i(LOG_TAG, "saveTimestampToFile: " + timestamp);
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-        try (
-            FileOutputStream fos = getApplicationContext().openFileOutput(FILE_NAME_TIMESTAMP, Context.MODE_PRIVATE);
-            ObjectOutputStream os = new ObjectOutputStream(fos)) {
-          os.writeObject(timestamp);
-        } catch (IOException e) {
-          Log.w(LOG_TAG, "Failed to save timestamp to file: ", e);
-        }
-      }
-    }).start();
   }
 }

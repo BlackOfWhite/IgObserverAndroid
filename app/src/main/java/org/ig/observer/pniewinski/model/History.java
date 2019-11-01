@@ -1,8 +1,9 @@
 package org.ig.observer.pniewinski.model;
 
+import android.support.annotation.NonNull;
 import java.io.Serializable;
 
-public class History implements Serializable {
+public class History implements Serializable, Comparable<History> {
 
   private String userName;
   private String timeStamp;
@@ -45,5 +46,10 @@ public class History implements Serializable {
 
   public void setMessage(String message) {
     this.message = message;
+  }
+
+  @Override
+  public int compareTo(@NonNull History o) {
+    return -1 * this.getTimeStamp().compareTo(o.getTimeStamp());
   }
 }
