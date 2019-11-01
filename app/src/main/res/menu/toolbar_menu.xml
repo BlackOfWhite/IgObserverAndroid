@@ -2,11 +2,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:app="http://schemas.android.com/apk/res-auto">
   <item
-    android:title="Log in"
+    android:title="@string/app_log_in"
     app:showAsAction="always"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:text="Log in"
+    android:text="@string/app_log_in"
     android:id="@+id/button_login"
     android:layout_marginTop="140dp"
     android:textAllCaps="false"

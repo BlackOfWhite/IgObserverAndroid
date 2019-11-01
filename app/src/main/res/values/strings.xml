@@ -1,5 +1,7 @@
 <resources>
   <string name="app_name">Ig Observer</string>
+  <string name="app_log_in">Log in</string>
+  <string name="app_log_out">Log out</string>
 
   <string name="title_activity_settings">Settings</string>
   <string name="title_activity_history">History</string>

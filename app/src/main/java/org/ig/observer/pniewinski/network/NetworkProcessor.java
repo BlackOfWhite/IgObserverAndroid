@@ -2,10 +2,6 @@ package org.ig.observer.pniewinski.network;
 
 import static org.codehaus.jackson.map.DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static org.ig.observer.pniewinski.activities.MainActivity.LOG_TAG;
-import static org.ig.observer.pniewinski.network.util.ResponseParser.getMatch;
-import static org.ig.observer.pniewinski.network.util.ResponseParser.parseBoolean;
-import static org.ig.observer.pniewinski.network.util.ResponseParser.parseLong;
-import static org.ig.observer.pniewinski.network.util.ResponseParser.parseString;
 
 import android.content.Context;
 import android.os.Build;
@@ -22,8 +18,8 @@ import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.regex.Pattern;
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLException;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.DeserializationConfig.Feature;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -35,18 +31,9 @@ import org.ig.observer.pniewinski.model.User;
 public class NetworkProcessor {
 
   private static final String USER_FEED_URL = "https://www.instagram.com/%s/";
-  private static final Pattern USER_ID_PATTERN = Pattern.compile("\"id\":\"(\\d+)\",\\\"is_busi"); // "id":"(\d+)","is_buss
-  private static final Pattern FOLLOWS_PATTERN = Pattern.compile("\"edge_follow\":\\{\"count\":(\\d+)\\}"); // "edge_follow":{"count":3626}
-  private static final Pattern FOLLOWED_BY_PATTERN = Pattern
-      .compile("\"edge_followed_by\":\\{\"count\":(\\d+)\\}"); // "edge_followed_by":{"count":3626
-  private static final Pattern USER_BIOGRAPHY_PATTERN = Pattern.compile("\"biography\":\"[^\"]*"); // {"biography":"bio"
-  private static final Pattern USER_POSTS_COUNT_PATTERN = Pattern
-      .compile("\"edge_owner_to_timeline_media\":\\{\"count\":(\\d+),"); // "edge_owner_to_timeline_media":{"count":52,
-  private static final Pattern IS_PRIVATE_PATTERN = Pattern.compile("\"is_private\":(true|false),"); // "is_private":true,
-  private static final Pattern PROFILE_IMG_URL_PATTERN = Pattern
-      .compile("<meta property=\"og:image\" content=\"[^\"]*"); // <meta property="og:image" content="url"
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().configure(Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
       .configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+  private static final String HTML_GRAPHQL_PATTERN_START = "\"graphql\":{";
 
   public static void clearCookies(Context context) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
@@ -65,9 +52,32 @@ public class NetworkProcessor {
     }
   }
 
+  public static int enclosingBracketPosition(String s, int n) {
+    int counter = 0;
+    char opening = '{';
+    char closing = '}';
+    int positionOfMatchingParent = -1;
+    boolean found = false;
+
+    while (n < s.length() && !found) {
+      if (s.charAt(n) == (opening)) {
+        counter++;
+      } else if (s.charAt(n) == (closing)) {
+        counter--;
+        if (counter == 0) {
+          positionOfMatchingParent = n;
+          found = true;
+        }
+      }
+      n++;
+    }
+    return positionOfMatchingParent;
+  }
+
   public User getUser(String userName, String cookie) throws UserNotFoundException, NetworkNotFound, ConnectionError {
     try {
-      User jsonUser = getUserFromJson(userName, cookie);
+      final String json = sendGET("https://www.instagram.com/" + userName + "/?__a=1", cookie);
+      User jsonUser = getUserFromJson(userName, cookie, json);
       Log.i(LOG_TAG, "Json user: " + jsonUser);
       return jsonUser;
     } catch (ConnectionError e) {
@@ -77,14 +87,13 @@ public class NetworkProcessor {
       }
       throw e;
     } catch (Exception e) {
-      Log.i(LOG_TAG, "Failed to fetch data for user: " + userName + ". Attempt to scrap html page.");
+      Log.w(LOG_TAG, "Failed to fetch data for user: " + userName + ". Attempt to scrap html page.", e);
       return getUserFromHtml(userName, cookie);
     }
   }
 
-  private User getUserFromJson(String userName, String cookie) throws NetworkNotFound, UserNotFoundException, ConnectionError {
+  private User getUserFromJson(String userName, String cookie, String json) throws NetworkNotFound, UserNotFoundException {
     try {
-      final String json = sendGET("https://www.instagram.com/" + userName + "/?__a=1", cookie);
       JsonNode jsonNode = OBJECT_MAPPER.readTree(json).get("graphql").get("user");
       Long id = Long.parseLong(jsonNode.get("id").getTextValue());
       Long follows = jsonNode.get("edge_follow").get("count").getLongValue();
@@ -103,8 +112,6 @@ public class NetworkProcessor {
     } catch (UnknownHostException e) {
       Log.w(LOG_TAG, "getUser: " + userName, e);
       throw new NetworkNotFound();
-    } catch (ConnectionError e) {
-      throw e;
     } catch (Exception e) {
       Log.w(LOG_TAG, "getUser: " + userName, e);
       throw new UserNotFoundException(userName);
@@ -113,31 +120,20 @@ public class NetworkProcessor {
 
   private User getUserFromHtml(String userName, String cookie) throws NetworkNotFound, UserNotFoundException {
     String url = String.format(USER_FEED_URL, userName);
-    String content = null;
     try {
-      content = sendGET(url, cookie);
+      String content = sendGET(url, cookie);
+      // Get index of first and last bracket
+      int indexStart = content.indexOf(HTML_GRAPHQL_PATTERN_START);
+      content = content.substring(indexStart);
+      int indexLast = enclosingBracketPosition(content, 0);
+      content = content.substring(0, indexLast + 1);
+      // Parse json
+      return getUserFromJson(userName, cookie, "{" + content + "}");
     } catch (UnknownHostException e) {
       Log.w(LOG_TAG, "getUser: " + userName, e);
       throw new NetworkNotFound();
     } catch (Exception e) {
       Log.w(LOG_TAG, "getUser: " + userName, e);
-      throw new UserNotFoundException(userName);
-    }
-
-    int indexStart = content.indexOf("<script type=\"text/javascript\">window._sharedData = {\"config\":{\"csrf_token\"");
-    String match = content.substring(indexStart);
-    Long id = parseLong(getMatch(match, USER_ID_PATTERN), "\"", 3, 10);
-    Long follows = parseLong(getMatch(match, FOLLOWS_PATTERN), ":", 2);
-    Long followed_by = parseLong(getMatch(match, FOLLOWED_BY_PATTERN), ":", 2);
-    String biography = parseString(getMatch(match, USER_BIOGRAPHY_PATTERN), "\"", 3, 0);
-    Long post_count = parseLong(getMatch(match, USER_POSTS_COUNT_PATTERN), ":", 2);
-    Boolean is_private = parseBoolean(getMatch(match, IS_PRIVATE_PATTERN), ":", 1);
-    Boolean has_stories = hasPublicStories(id, cookie);
-    if (id != null) {
-      String img_url = parseString(getMatch(content, PROFILE_IMG_URL_PATTERN), "\"", 3, 0);
-      return new User(id, userName, img_url, post_count, follows, followed_by, biography, is_private, has_stories);
-    } else {
-      Log.w(LOG_TAG, "getUser: " + userName + ", no patterns found in response");
       throw new UserNotFoundException(userName);
     }
   }
@@ -174,6 +170,9 @@ public class NetworkProcessor {
       while ((next = br.readLine()) != null) {
         stringBuilder.append(next);
       }
+    } catch (SSLException exception) {
+      // Possible connection lost, retry
+      throw exception;
     }
     return stringBuilder.toString();
   }
