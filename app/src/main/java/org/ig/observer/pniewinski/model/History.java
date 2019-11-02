@@ -1,17 +1,22 @@
 package org.ig.observer.pniewinski.model;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 public class History implements Serializable, Comparable<History> {
 
+  private static final DateFormat dateFormat = new SimpleDateFormat("HH:mm dd.MM.yyyy");
   private String userName;
-  private String timeStamp;
+  private Long timestamp;
+  private String timestampText;
   private String message;
 
-  public History(String userName, String timeStamp, String message) {
+  public History(String userName, Long timestamp, String message) {
     this.userName = userName;
-    this.timeStamp = timeStamp;
+    this.timestamp = timestamp;
+    this.timestampText = dateFormat.format(timestamp);
     this.message = message;
   }
 
@@ -19,7 +24,7 @@ public class History implements Serializable, Comparable<History> {
   public String toString() {
     return "History{" +
         "userName='" + userName + '\'' +
-        ", timeStamp='" + timeStamp + '\'' +
+        ", timestamp='" + timestamp + '\'' +
         ", message='" + message + '\'' +
         '}';
   }
@@ -32,12 +37,20 @@ public class History implements Serializable, Comparable<History> {
     this.userName = userName;
   }
 
-  public String getTimeStamp() {
-    return timeStamp;
+  public Long getTimestamp() {
+    return timestamp;
   }
 
-  public void setTimeStamp(String timeStamp) {
-    this.timeStamp = timeStamp;
+  public void setTimestamp(Long timestamp) {
+    this.timestamp = timestamp;
+  }
+
+  public String getTimestampText() {
+    return timestampText;
+  }
+
+  public void setTimestampText(String timestampText) {
+    this.timestampText = timestampText;
   }
 
   public String getMessage() {
@@ -50,6 +63,6 @@ public class History implements Serializable, Comparable<History> {
 
   @Override
   public int compareTo(@NonNull History o) {
-    return -1 * this.getTimeStamp().compareTo(o.getTimeStamp());
+    return -1 * this.getTimestamp().compareTo(o.getTimestamp());
   }
 }

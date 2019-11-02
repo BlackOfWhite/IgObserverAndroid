@@ -10,11 +10,11 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.SwitchPreference;
-import android.support.v4.app.NavUtils;
-import android.support.v7.app.ActionBar;
 import android.text.Html;
 import android.util.Log;
 import android.view.MenuItem;
+import androidx.appcompat.app.ActionBar;
+import androidx.core.app.NavUtils;
 import org.ig.observer.pniewinski.R;
 
 public class UserSettingsActivity extends AppCompatPreferenceActivity {

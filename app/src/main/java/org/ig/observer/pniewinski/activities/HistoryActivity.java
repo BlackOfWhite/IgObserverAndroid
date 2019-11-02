@@ -4,8 +4,8 @@ import static org.ig.observer.pniewinski.io.FileManager.loadHistoryFromFile;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.widget.ListView;
+import androidx.appcompat.app.AppCompatActivity;
 import java.util.LinkedList;
 import org.ig.observer.pniewinski.R;
 import org.ig.observer.pniewinski.adapters.HistoryListAdapter;

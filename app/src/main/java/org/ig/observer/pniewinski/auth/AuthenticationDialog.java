@@ -5,12 +5,12 @@ import static org.ig.observer.pniewinski.activities.MainActivity.LOG_TAG;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import androidx.annotation.NonNull;
 import org.ig.observer.pniewinski.R;
 
 public class AuthenticationDialog extends Dialog {

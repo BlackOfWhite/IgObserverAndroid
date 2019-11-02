@@ -1,7 +1,7 @@
 package org.ig.observer.pniewinski;
 
-import android.support.design.widget.Snackbar;
 import android.view.View;
+import com.google.android.material.snackbar.Snackbar;
 
 public class SnackbarUtils {
 

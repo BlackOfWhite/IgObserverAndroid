@@ -28,12 +28,12 @@ public class HistoryListAdapter extends ArrayAdapter {
   public View getView(final int position, View view, ViewGroup parent) {
     LayoutInflater inflater = historyActivity.getLayoutInflater();
     final View rowView = inflater.inflate(R.layout.history_listview_row, null, true);
-    TextView nameTextField = (TextView) rowView.findViewById(R.id.name_text_view);
-    TextView infoTextField = (TextView) rowView.findViewById(R.id.info_text_view);
+    TextView nameTextField = rowView.findViewById(R.id.name_text_view);
+    TextView infoTextField = rowView.findViewById(R.id.info_text_view);
 
     // Main section
     final History history = historyList.get(position);
-    nameTextField.setText(history.getTimeStamp() + "   " + history.getUserName());
+    nameTextField.setText(history.getTimestampText() + "   " + history.getUserName());
     infoTextField.setText(getFormattedText(history.getMessage()));
     return rowView;
   }

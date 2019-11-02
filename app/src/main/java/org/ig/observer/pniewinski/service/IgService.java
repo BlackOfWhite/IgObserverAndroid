@@ -30,12 +30,10 @@ import android.graphics.Color;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationCompat.BigTextStyle;
 import android.util.Log;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationCompat.BigTextStyle;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -43,6 +41,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.ReentrantLock;
 import org.ig.observer.pniewinski.R;
 import org.ig.observer.pniewinski.activities.MainActivity;
 import org.ig.observer.pniewinski.exceptions.ConnectionError;
@@ -55,6 +54,7 @@ public class IgService extends IntentService {
 
   private static final int QUEUE_SIZE = 100;
   private static final NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.US);
+  private static ReentrantLock lock = new ReentrantLock();
   private final String ARROW_RIGHT = " \\u27a1\\ufe0f ";
   private SharedPreferences preferences;
   private String preferencePattern = "%s" + PREFERENCE_SEPARATOR + "%s"; // username + PREFERENCE_SEPARATOR + key
@@ -66,27 +66,35 @@ public class IgService extends IntentService {
 
   @Override
   protected void onHandleIntent(Intent intent) {
-    // Do the task here
-    Log.i(LOG_TAG, "Starting IgService service run");
-    // Check last service run
-    Long lastTimestamp = loadTimestampFromFile(this);
-    final long newTimestamp = System.currentTimeMillis();
-    if (lastTimestamp != null && newTimestamp - lastTimestamp <= SERVICE_INTERVAL) {
-      Log.i(LOG_TAG, "Tried to run service before interval has passed.");
-      return;
+    Log.i(LOG_TAG, "onHandleIntent: Starting IgService service run");
+    if (lock.tryLock()) {
+      try {
+        // Check last service run
+        Long lastTimestamp = loadTimestampFromFile(this);
+        final long newTimestamp = System.currentTimeMillis();
+        if (lastTimestamp != null && newTimestamp - lastTimestamp <= SERVICE_INTERVAL) {
+          Log.i(LOG_TAG, "Tried to run service before interval has passed.");
+          return;
+        } else {
+          saveTimestampToFile(newTimestamp, getApplicationContext());
+        }
+        Log.i(LOG_TAG, "Starting IgService run. Last timestamp was: " + lastTimestamp + "\n, now is: " + newTimestamp);
+        // Logic
+        preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        final String cookie = loadCookieFromFile(this);
+        Log.i(LOG_TAG, "getCookie: " + cookie);
+        Log.i(LOG_TAG, "allPreferences: " + preferences.getAll());
+        CopyOnWriteArrayList<User> users = loadUsersFromFile(getApplicationContext());
+        Log.i(LOG_TAG, "onHandleIntent::userList: " + users);
+        if (users != null && !users.isEmpty()) {
+          processUsers(users, cookie);
+        }
+      } finally {
+        lock.unlock();
+      }
     } else {
-      saveTimestampToFile(newTimestamp, getApplicationContext());
-    }
-    Log.i(LOG_TAG, "Starting IgService run. Last timestamp was: " + lastTimestamp + "\n, now is: " + newTimestamp);
-    // Logic
-    preferences = PreferenceManager.getDefaultSharedPreferences(this);
-    final String cookie = loadCookieFromFile(this);
-    Log.i(LOG_TAG, "getCookie: " + cookie);
-    Log.i(LOG_TAG, "allPreferences: " + preferences.getAll());
-    CopyOnWriteArrayList<User> users = loadUsersFromFile(getApplicationContext());
-    Log.i(LOG_TAG, "onHandleIntent::userList: " + users);
-    if (users != null && !users.isEmpty()) {
-      processUsers(users, cookie);
+      Log.i(LOG_TAG, "Lock not acquired.");
+      return;
     }
   }
 
@@ -204,7 +212,7 @@ public class IgService extends IntentService {
   private String buildUserNotificationMessage(User oldUser, User newUser) {
     StringBuilder sb = new StringBuilder();
     String userName = oldUser.getName();
-    String timestamp = getTimestamp();
+    long timestamp = System.currentTimeMillis();
     if (!oldUser.getBiography().equals(newUser.getBiography()) && isNotificationEnabled(userName, KEY_NOTIFICATION_BIOGRAPHY)) {
       String message = "The biography has changed. ";
       sb.append(message);
@@ -288,9 +296,5 @@ public class IgService extends IntentService {
       notification_manager.createNotificationChannel(mChannel);
     }
     return notification_manager;
-  }
-
-  private String getTimestamp() {
-    return new SimpleDateFormat("HH:mm dd.MM.yyyy").format(new Date());
   }
 }
