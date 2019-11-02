@@ -13,37 +13,39 @@
   android:paddingRight="@dimen/activity_horizontal_margin"
   android:paddingTop="@dimen/activity_vertical_margin"
   tools:context="org.ig.observer.pniewinski.activities.MainActivity">
-
-  <ListView
-    android:id="@+id/list_view"
-    android:layout_width="wrap_content"
-    android:layout_height="match_parent"
-    android:clickable="true"
-    android:longClickable="true"
-    android:focusable="true">
-  </ListView>
-
-  <com.google.android.material.floatingactionbutton.FloatingActionButton
-    android:id="@+id/fab_add_new"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_alignParentBottom="true"
-    android:layout_alignParentEnd="true"
-    android:layout_alignParentRight="true"
-    android:layout_gravity="end|bottom"
-    app:srcCompat="@drawable/ic_add"
-    android:scaleType="center"
-    android:layout_margin="16dp"/>
-
   <com.google.android.gms.ads.AdView
     android:id="@+id/adView"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_centerHorizontal="true"
     android:layout_alignParentBottom="true"
-    android:layout_below="@id/list_view"
     ads:adSize="BANNER"
     ads:adUnitId="ca-app-pub-3940256099942544/6300978111">
   </com.google.android.gms.ads.AdView>
-</RelativeLayout>
 
+  <RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_above="@id/adView">
+    <ListView
+      android:id="@+id/list_view"
+      android:layout_width="wrap_content"
+      android:layout_height="match_parent"
+      android:clickable="true"
+      android:longClickable="true"
+      android:focusable="true">
+    </ListView>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+      android:id="@+id/fab_add_new"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_alignParentBottom="true"
+      android:layout_alignParentEnd="true"
+      android:layout_alignParentRight="true"
+      android:layout_gravity="end|bottom"
+      app:srcCompat="@drawable/ic_add"
+      android:scaleType="center"
+      android:layout_margin="16dp"/>
+  </RelativeLayout>
+</RelativeLayout>

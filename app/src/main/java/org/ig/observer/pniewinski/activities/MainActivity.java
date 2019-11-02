@@ -32,6 +32,9 @@ import android.widget.ListView;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AlertDialog.Builder;
 import androidx.appcompat.app.AppCompatActivity;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.List;
@@ -164,6 +167,13 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     };
     registerReceiver(broadcastReceiver, new IntentFilter(IG_BROADCAST_LIST_UPDATE));
     registerReceiver(broadcastReceiver, new IntentFilter(IG_BROADCAST_SESSION_END));
+
+    // Load Ads
+    MobileAds.initialize(this, initializationStatus -> {
+    });
+    AdView mAdView = findViewById(R.id.adView);
+    AdRequest adRequest = new AdRequest.Builder().build();
+    mAdView.loadAd(adRequest);
   }
 
   @Override
