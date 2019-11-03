@@ -72,7 +72,7 @@ public class FileManager {
           FileInputStream fis = context.openFileInput(FILE_NAME_HISTORY);
           ObjectInputStream is = new ObjectInputStream(fis)) {
         LinkedList<History> histories = (LinkedList<History>) is.readObject();
-        Log.i(LOG_TAG, "loadedHistoryFromFile: " + histories);
+//        Log.i(LOG_TAG, "loadedHistoryFromFile: " + histories);
         Collections.sort(histories);
         return histories;
       } catch (FileNotFoundException e) {

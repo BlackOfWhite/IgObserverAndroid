@@ -6,6 +6,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
+import java.util.stream.Stream;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.junit.Assert;
@@ -33,6 +35,12 @@ public class ExampleUnitTest {
   }
 
   @Test
+  public void generator() {
+    Stream.generate(new Random()::nextInt)
+        .limit(5).forEach(System.out::println);
+  }
+
+  @Test
   public void leftJoinLists() {
     List<Book> left = Arrays.asList(new Book("1", "Merry"), new Book("2", "Christmas"),
         new Book("3", "And"), new Book("4", "Happy NY"));
@@ -46,12 +54,7 @@ public class ExampleUnitTest {
   }
 
   private <T> T leftJoinItem(T leftItem, List<T> right) {
-    for (T i : right) {
-      if (i.equals(leftItem)) {
-        return i;
-      }
-    }
-    return leftItem;
+    return right.stream().filter(leftItem::equals).findFirst().orElse(leftItem);
   }
 
   private class Book {
@@ -71,6 +74,7 @@ public class ExampleUnitTest {
     public void setId(String id) {
       this.id = id;
     }
+
     public String getTitle() {
       return title;
     }

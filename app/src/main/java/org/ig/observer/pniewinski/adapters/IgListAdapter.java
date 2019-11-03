@@ -1,6 +1,7 @@
 package org.ig.observer.pniewinski.adapters;
 
 import static org.ig.observer.pniewinski.activities.MainActivity.LOG_TAG;
+import static org.ig.observer.pniewinski.activities.MainActivity.MAX_OBSERVED;
 
 import android.graphics.Bitmap;
 import android.os.Handler;
@@ -90,6 +91,10 @@ public class IgListAdapter extends ArrayAdapter {
     }
     refreshItems(finaList);
     return finaList;
+  }
+
+  public boolean isListMaxSizeReached() {
+    return users.size() >= MAX_OBSERVED;
   }
 
   private User leftJoinItem(User leftItem, List<User> right) {

@@ -58,14 +58,14 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
   public static final Long SERVICE_INTERVAL = 10 * 60_000L; // 10min
   public static final String IG_BROADCAST_LIST_UPDATE = "ig_broadcast_list_update";
   public static final String IG_BROADCAST_SESSION_END = "ig_broadcast_session_end";
-  private static final int MAX_OBSERVED = 10;
+  public static final int MAX_OBSERVED = 10;
   private ExecutorService networkExecutor = Executors.newSingleThreadExecutor();
   private ListView listView;
   private IgListAdapter adapter;
   private Context context;
   private NetworkProcessor networkProcessor;
   private BroadcastReceiver broadcastReceiver; // receive events from IgService
-  private MenuItem logInItem;
+  private volatile boolean isSignedIn = false;
 
   // Create an action bar button
   @Override
@@ -73,10 +73,19 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     getMenuInflater().inflate(R.menu.toolbar_menu, menu);
     // Login button
     if (loadCookieFromFile(this) != null) {
-      logInItem = menu.findItem(R.id.button_login);
-      logInItem.setTitle(R.string.app_log_out);
+      this.isSignedIn = true;
+      menu.findItem(R.id.button_login).setTitle(R.string.app_log_out);
     }
     return super.onCreateOptionsMenu(menu);
+  }
+
+  /**
+   * Triggered by invalidateOptionsMenu()
+   */
+  @Override
+  public boolean onPrepareOptionsMenu(Menu menu) {
+    menu.findItem(R.id.button_login).setTitle(isSignedIn ? R.string.app_log_out : R.string.app_log_in);
+    return super.onPrepareOptionsMenu(menu);
   }
 
   @Override
@@ -143,7 +152,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     fabButton.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        if (users.size() >= MAX_OBSERVED) {
+        if (adapter.isListMaxSizeReached()) {
           snackbar(fabButton, "You have reached a maximum number of users observed: " + MAX_OBSERVED);
         } else {
           showAddItemDialog();
@@ -235,22 +244,23 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
   }
 
   private void addNewUser(final String userName) {
-    networkExecutor.submit(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          final String cookie = loadCookieFromFile(context);
-          User user = networkProcessor.getUser(userName, cookie);
-          addUserToList(user);
-          snackbar(listView, "You are now observing user: " + userName);
-        } catch (UserNotFoundException e) {
-          snackbar(listView, "User " + userName + " was not found");
-        } catch (NetworkNotFound e) {
-          networkNotFoundSnackbar(listView);
-        } catch (ConnectionError connectionError) {
-          sessionEndSnackbar(listView);
-          signOut();
-        }
+    networkExecutor.submit(() -> {
+      // Double check, because user could schedule multiple tasks very quickly
+      if (adapter.isListMaxSizeReached()) {
+        return;
+      }
+      try {
+        final String cookie = loadCookieFromFile(context);
+        User user = networkProcessor.getUser(userName, cookie);
+        addUserToList(user);
+        snackbar(listView, "You are now observing user: " + userName);
+      } catch (UserNotFoundException e) {
+        snackbar(listView, "User " + userName + " was not found");
+      } catch (NetworkNotFound e) {
+        networkNotFoundSnackbar(listView);
+      } catch (ConnectionError connectionError) {
+        sessionEndSnackbar(listView);
+        signOut();
       }
     });
   }
@@ -283,7 +293,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
   }
 
   /**
-   * Only development purposes.
+   * Only development purposes
    */
   private void clearStorage() {
     saveUsersToFile(new CopyOnWriteArrayList<>(), context);
@@ -292,7 +302,8 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
   private void signOut() {
     clearCookies(this);
     saveCookieToFile(null, context);
-    logInItem.setTitle(R.string.app_log_in);
+    this.isSignedIn = false;
+    invalidateOptionsMenu();
   }
 
   @Override
@@ -301,7 +312,8 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     if (cookie != null) {
       snackbar(listView, "Successfully logged in");
       saveCookieToFile(cookie, context);
-      runOnUiThread(() -> logInItem.setTitle(R.string.app_log_out));
+      this.isSignedIn = true;
+      invalidateOptionsMenu();
     } else {
       snackbar(listView, "Opss.. failed to log in");
     }
