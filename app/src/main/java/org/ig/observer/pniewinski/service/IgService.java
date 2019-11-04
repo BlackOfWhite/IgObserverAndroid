@@ -195,8 +195,9 @@ public class IgService extends IntentService {
     NotificationCompat.Builder mBuilder =
         new NotificationCompat.Builder(this)
             .setSmallIcon(R.drawable.ic_magnifying_glass)
-            .setContentTitle("Changes for user " + userName + " detected!")
+            .setContentTitle(userName)
             .setContentText(message)
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .setStyle(new BigTextStyle().bigText(message))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
