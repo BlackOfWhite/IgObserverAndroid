@@ -32,9 +32,12 @@ import android.widget.ListView;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AlertDialog.Builder;
 import androidx.appcompat.app.AppCompatActivity;
+import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.initialization.InitializationStatus;
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.List;
@@ -178,10 +181,21 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     registerReceiver(broadcastReceiver, new IntentFilter(IG_BROADCAST_SESSION_END));
 
     // Load Ads
-    MobileAds.initialize(this, initializationStatus -> {
+    MobileAds.initialize(this, new OnInitializationCompleteListener() {
+      @Override
+      public void onInitializationComplete(InitializationStatus initializationStatus) {
+      }
     });
     AdView mAdView = findViewById(R.id.adView);
-    AdRequest adRequest = new AdRequest.Builder().build();
+    mAdView.setAdListener(new AdListener() {
+      @Override
+      public void onAdFailedToLoad(int errorCode) {
+        Log.w(LOG_TAG, "Failed to load an admob ad: " + errorCode);
+      }
+    });
+    AdRequest adRequest = new AdRequest.Builder()
+//        .addTestDevice("807A759E2D6315A146E248E9FADB2A73")
+        .build();
     mAdView.loadAd(adRequest);
   }
 

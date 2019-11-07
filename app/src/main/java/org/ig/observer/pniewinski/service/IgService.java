@@ -199,7 +199,7 @@ public class IgService extends IntentService {
             .setContentText(message)
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .setStyle(new BigTextStyle().bigText(message))
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+            .setPriority(NotificationCompat.PRIORITY_HIGH);
 
     PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
         new Intent(this, MainActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);

@@ -2,8 +2,8 @@
   <string name="app_name">Ig Observer</string>
   <string name="app_log_in">Log in</string>
   <string name="app_log_out">Log out</string>
-  <string name="ad_unit_id">ca-app-pub-1674699593445979/1298496381</string>
-  <string name="ad_unit_id_t">ca-app-pub-1674699593445979~1298496381</string>
+  <string name="admob_app_id">ca-app-pub-1674699593445979~1298496381</string>
+  <string name="admob_banner_id">ca-app-pub-1674699593445979/1788632737</string>
 
   <string name="title_activity_settings">Settings</string>
   <string name="title_activity_history">History</string>

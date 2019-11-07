@@ -14,11 +14,12 @@
     android:theme="@style/AppTheme">
     <meta-data
       android:name="com.google.android.gms.ads.APPLICATION_ID"
-      android:value="@string/ad_unit_id_t"/>
-    <activity android:name=".activities.MainActivity">
+      android:value="@string/admob_app_id"/>
+    <activity
+      android:name=".activities.MainActivity"
+      android:launchMode="singleTask">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
-
         <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>
     </activity>
