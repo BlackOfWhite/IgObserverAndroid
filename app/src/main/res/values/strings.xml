@@ -25,7 +25,7 @@
 
   <string name="pref_header_privacy_policy">Privacy Policy</string>
   <string name="summary_privacy_policy">Click to view</string>
-  <string name="privacy_policy"><b>Last update: October 21, 2019</b>
+  <string name="privacy_policy"><b>Last update: November 13, 2019</b>
     \nThis Privacy Policy sets forth IgObserver policy with respect to information including personally identifiable data ("Personal Data") and other information that is collected from visitors to the Site and Services.
 
     \n\n<b>Information We Collect</b>
@@ -40,6 +40,10 @@
 
     \n\n<b>Our Use of Your Personal Data and Other Information</b>
     \nIgObserver uses the Personal Data you provide in a manner that is consistent with this Privacy Policy. If you provide Personal Data for a certain reason, we may use the Personal Data in connection with the reason for which it was provided. For instance, if you contact us by email, we will use the Personal Data you provide to answer your question or resolve your problem.
+    \n\nWe use or may use the following ad serving services to help monetise the Software: AdMob.
+    Google may use the information that it obtains via the third party cookies, web beacons, and other technologies used in connection with AdMob in accordance with its advertising Privacy Policies.
+    You can visit these third party websites to opt out of cookies for interest based advertising or opt out by visiting <a href="www.aboutcookies.org">www.aboutcookies.org</a>.
+    View AdMob\'s Privacy Policy: <a href="https://www.support.google.com/admob/answer/6128543">https://www.support.google.com/admob/answer/6128543/</a>.
 
     \n\n<b>Our Disclosure of Your Personal Data and Other Information</b>
     \nIgObserver is not in the business of selling your information. We consider this information to be a vital part of our relationship with you.

@@ -33,8 +33,8 @@ import org.ig.observer.pniewinski.model.User;
 
 public class IgListAdapter extends ArrayAdapter {
 
-  private static final Spanned DIALOG_MESSAGE = (Html.fromHtml("&#8226; Click list item to see user details.<br/><br/>"
-      + "&#8226; Click and hold to enter notification settings."));
+  private static final Spanned DIALOG_MESSAGE = (Html.fromHtml("&#8226; Click list item to see observed account's details.<br/><br/>"
+      + "&#8226; Click and hold item to enter notification settings."));
   private static final StyleSpan BOLD_STYLE = new StyleSpan(android.graphics.Typeface.BOLD);
   private final MainActivity mainActivity;
   private CopyOnWriteArrayList<User> users;
@@ -127,9 +127,8 @@ public class IgListAdapter extends ArrayAdapter {
   private void showInformationalDialog() {
     Log.i(LOG_TAG, "showInformationalDialog: show");
     AlertDialog alertDialog = new Builder(mainActivity, R.style.AlertDialogStyle).setTitle("Tip")
-        .setMessage(DIALOG_MESSAGE)
-        .setIcon(R.drawable.ic_user_not_found).setPositiveButton("OK", null).create();
-
+        .setMessage(DIALOG_MESSAGE).setIcon(R.drawable.ic_user_not_found)
+        .setPositiveButton("OK", null).create();
     alertDialog.show();
   }
 

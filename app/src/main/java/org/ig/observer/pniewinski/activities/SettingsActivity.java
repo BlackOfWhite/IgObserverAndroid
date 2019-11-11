@@ -6,6 +6,9 @@ import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceFragment;
+import android.text.SpannableString;
+import android.text.method.LinkMovementMethod;
+import android.text.util.Linkify;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -82,9 +85,17 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
     private void showPrivacyPolicyDialog() {
       LayoutInflater inflater = LayoutInflater.from(getActivity());
+      // ScrollView
       View dialogView = inflater.inflate(R.layout.privacy_policy_dialog, null);
       TextView textView = dialogView.findViewById(R.id.text_view_privacy_policy);
-      textView.setText(getText(R.string.privacy_policy));
+      // Handle links
+      final SpannableString text =
+          new SpannableString(getText(R.string.privacy_policy));
+      Linkify.addLinks(text, Linkify.WEB_URLS);
+      textView.setText(text);
+      textView.setAutoLinkMask(0);
+      textView.setMovementMethod(LinkMovementMethod.getInstance());
+      // Show dialog
       Dialog dialog = new Builder(getActivity(), R.style.AlertDialogStyle)
           .setCustomTitle(makeCustomTitle())
           .setView(dialogView)

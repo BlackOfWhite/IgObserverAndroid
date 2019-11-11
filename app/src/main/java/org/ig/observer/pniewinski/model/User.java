@@ -119,9 +119,6 @@ public class User implements Serializable {
   }
 
   public String getInfo() {
-//    if (is_private) {
-//      return "This account is private";
-//    }
     return "Posts: " + getPosts() + "   " + (has_stories ? "User has some stories" : "No stories") +
         "\nFollows: " + prettyCount(getFollows()) + "   Followed by: " + prettyCount(getFollowed_by());
   }
