@@ -62,6 +62,7 @@ public class IgService extends IntentService {
 
   public IgService() {
     super("IgService");
+    Log.i(LOG_TAG, "IgService constructor");
   }
 
   @Override
@@ -70,8 +71,16 @@ public class IgService extends IntentService {
     if (lock.tryLock()) {
       try {
         // Check last service run
-        Long lastTimestamp = loadTimestampFromFile(this);
         final long newTimestamp = System.currentTimeMillis();
+        final String cookie = loadCookieFromFile(this);
+
+        // Handle user logged out
+        if (cookie == null) {
+          Log.i(LOG_TAG, "Tried to run service, but no cookie was found.");
+          return;
+        }
+
+        final Long lastTimestamp = loadTimestampFromFile(this);
         if (lastTimestamp != null && newTimestamp - lastTimestamp <= SERVICE_INTERVAL) {
           Log.i(LOG_TAG, "Tried to run service before interval has passed.");
           return;
@@ -81,7 +90,6 @@ public class IgService extends IntentService {
         Log.i(LOG_TAG, "Starting IgService run. Last timestamp was: " + lastTimestamp + "\n, now is: " + newTimestamp);
         // Logic
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        final String cookie = loadCookieFromFile(this);
         Log.i(LOG_TAG, "getCookie: " + cookie);
         Log.i(LOG_TAG, "allPreferences: " + preferences.getAll());
         CopyOnWriteArrayList<User> users = loadUsersFromFile(getApplicationContext());
@@ -96,6 +104,12 @@ public class IgService extends IntentService {
       Log.i(LOG_TAG, "Lock not acquired.");
       return;
     }
+  }
+
+  private void signOut() {
+    // Send broadcast
+    Intent intent = new Intent(IG_BROADCAST_SESSION_END);
+    sendBroadcast(intent);
   }
 
   private void processUsers(List<User> userList, final String cookie) {
@@ -133,9 +147,7 @@ public class IgService extends IntentService {
             userNotificationMessages.clear();
             userNotificationMessages.put(new User(1L, "Your session has just ended", ""), "Please log in.");
             sendNotifications(userNotificationMessages);
-            // Send broadcast
-            Intent intent = new Intent(IG_BROADCAST_SESSION_END);
-            sendBroadcast(intent);
+            signOut();
             break;
           }
         }
@@ -150,6 +162,8 @@ public class IgService extends IntentService {
         Log.e(LOG_TAG, "Interrupted IgService!", e);
       }
     }
+
+    // Synchronization complete
     if (userList.size() != newUserList.size()) {
       Log.i(LOG_TAG,
           "processUsers - lists have different sizes :: " + userList.size() + " >> " + userList + "\n" + newUserList.size() + " >> "
@@ -166,7 +180,7 @@ public class IgService extends IntentService {
     intent.putExtra("user_list", newUserList);
     sendBroadcast(intent);
 
-    // Update history
+    // Update history list
     if (historiesTmp.size() > 0) {
       LinkedList<History> histories = loadHistoryFromFile(this);
       for (History history : historiesTmp) {

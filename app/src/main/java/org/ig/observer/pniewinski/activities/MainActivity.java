@@ -36,8 +36,6 @@ import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.ads.initialization.InitializationStatus;
-import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.List;
@@ -78,6 +76,9 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     if (loadCookieFromFile(this) != null) {
       this.isSignedIn = true;
       menu.findItem(R.id.button_login).setTitle(R.string.app_log_out);
+    } else {
+      // Sign in request notification
+      snackbar(listView, "Please log in");
     }
     return super.onCreateOptionsMenu(menu);
   }
@@ -116,6 +117,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    Log.i(LOG_TAG, "onCreate: ");
     setContentView(R.layout.activity_main);
     this.context = this;
     // Adapter
@@ -123,7 +125,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     this.networkProcessor = new NetworkProcessor();
     // List
     adapter = new IgListAdapter(this, users);
-    listView = (ListView) findViewById(R.id.list_view);
+    listView = findViewById(R.id.list_view);
     listView.setAdapter(adapter);
     listView.setLongClickable(true);
     listView.setOnItemClickListener(new OnItemClickListener() {
@@ -181,10 +183,11 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     registerReceiver(broadcastReceiver, new IntentFilter(IG_BROADCAST_SESSION_END));
 
     // Load Ads
-    MobileAds.initialize(this, new OnInitializationCompleteListener() {
-      @Override
-      public void onInitializationComplete(InitializationStatus initializationStatus) {
-      }
+    loadAdMob();
+  }
+
+  private void loadAdMob() {
+    MobileAds.initialize(this, initializationStatus -> {
     });
     AdView mAdView = findViewById(R.id.adView);
     mAdView.setAdListener(new AdListener() {
@@ -194,7 +197,8 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
       }
     });
     AdRequest adRequest = new AdRequest.Builder()
-//        .addTestDevice("807A759E2D6315A146E248E9FADB2A73")
+        // use only in debug mode
+        .addTestDevice("807A759E2D6315A146E248E9FADB2A73")
         .build();
     mAdView.loadAd(adRequest);
   }
@@ -202,7 +206,8 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
   @Override
   public void onDestroy() {
     super.onDestroy();
-    unregisterReceiver(broadcastReceiver);
+    Log.i(LOG_TAG, "onDestroy: ");
+//    unregisterReceiver(broadcastReceiver);
   }
 
   // Setup a recurring alarm every half hour
@@ -212,15 +217,16 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     // Create a PendingIntent to be triggered when the alarm goes off
     final PendingIntent pIntent = PendingIntent.getBroadcast(this, AlarmReceiver.REQUEST_CODE,
         intent, PendingIntent.FLAG_UPDATE_CURRENT);
-    // Setup periodic alarm every every half hour from this point onwards
+    // Setup periodic alarm
     AlarmManager alarm = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-    alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(),
+    alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000L,
         SERVICE_INTERVAL, pIntent); // every 5 min
   }
 
   @Override
   protected void onResume() {
     super.onResume();
+    Log.i(LOG_TAG, "onResume: ");
 //    this.users = loadUsersFromFile();
   }
 
@@ -313,7 +319,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     saveUsersToFile(new CopyOnWriteArrayList<>(), context);
   }
 
-  private void signOut() {
+  private synchronized void signOut() {
     clearCookies(this);
     saveCookieToFile(null, context);
     this.isSignedIn = false;

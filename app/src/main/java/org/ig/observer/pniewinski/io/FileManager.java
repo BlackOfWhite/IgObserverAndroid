@@ -89,7 +89,7 @@ public class FileManager {
 
   public static void saveHistoryToFile(LinkedList<History> list, Context context) {
     synchronized (historyLock) {
-      Log.i(LOG_TAG, "saveHistoryToFile: " + list);
+//      Log.i(LOG_TAG, "saveHistoryToFile: " + list);
       new Thread(new Runnable() {
         @Override
         public void run() {
