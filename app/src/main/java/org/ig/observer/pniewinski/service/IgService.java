@@ -46,6 +46,7 @@ import org.ig.observer.pniewinski.R;
 import org.ig.observer.pniewinski.activities.MainActivity;
 import org.ig.observer.pniewinski.exceptions.ConnectionError;
 import org.ig.observer.pniewinski.exceptions.UserRemovedError;
+import org.ig.observer.pniewinski.model.BlockedUser;
 import org.ig.observer.pniewinski.model.History;
 import org.ig.observer.pniewinski.model.User;
 import org.ig.observer.pniewinski.network.NetworkProcessor;
@@ -228,6 +229,19 @@ public class IgService extends IntentService {
     StringBuilder sb = new StringBuilder();
     String userName = oldUser.getName();
     long timestamp = System.currentTimeMillis();
+
+    // Handle blocked users
+    if (oldUser instanceof BlockedUser) {
+      String message = "You have been un-blocked. ";
+      historiesTmp.addFirst(new History(oldUser.getName(), timestamp, message));
+      return message;
+    } else if (newUser instanceof BlockedUser) {
+      String message = "You have been blocked. ";
+      historiesTmp.addFirst(new History(oldUser.getName(), timestamp, message));
+      return message;
+    }
+
+    // Handle other cases
     if (!oldUser.getBiography().equals(newUser.getBiography()) && isNotificationEnabled(userName, KEY_NOTIFICATION_BIOGRAPHY)) {
       String message = "The biography has changed. ";
       sb.append(message);

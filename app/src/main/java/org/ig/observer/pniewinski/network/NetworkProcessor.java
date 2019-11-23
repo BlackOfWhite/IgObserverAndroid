@@ -26,6 +26,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.ig.observer.pniewinski.exceptions.ConnectionError;
 import org.ig.observer.pniewinski.exceptions.NetworkNotFound;
 import org.ig.observer.pniewinski.exceptions.UserNotFoundException;
+import org.ig.observer.pniewinski.model.BlockedUser;
 import org.ig.observer.pniewinski.model.User;
 
 public class NetworkProcessor {
@@ -77,6 +78,11 @@ public class NetworkProcessor {
   public User getUser(String userName, String cookie) throws UserNotFoundException, NetworkNotFound, ConnectionError {
     try {
       final String json = sendGET("https://www.instagram.com/" + userName + "/?__a=1", cookie);
+      // User found but blocked
+      if (json.equals("{}")) {
+        Log.i(LOG_TAG, "getUserFromJson: user found, but is blocked");
+        return new BlockedUser(userName);
+      }
       User jsonUser = getUserFromJson(userName, cookie, json);
       Log.i(LOG_TAG, "Json user: " + jsonUser);
       return jsonUser;
@@ -92,7 +98,8 @@ public class NetworkProcessor {
     }
   }
 
-  private User getUserFromJson(String userName, String cookie, String json) throws NetworkNotFound, UserNotFoundException {
+  private User getUserFromJson(String userName, String cookie, String json)
+      throws NetworkNotFound, UserNotFoundException {
     try {
       JsonNode jsonNode = OBJECT_MAPPER.readTree(json).get("graphql").get("user");
       Long id = Long.parseLong(jsonNode.get("id").getTextValue());

@@ -29,6 +29,7 @@ import org.ig.observer.pniewinski.R;
 import org.ig.observer.pniewinski.activities.MainActivity;
 import org.ig.observer.pniewinski.image.DownloadImageTask;
 import org.ig.observer.pniewinski.image.Utils;
+import org.ig.observer.pniewinski.model.BlockedUser;
 import org.ig.observer.pniewinski.model.User;
 
 public class IgListAdapter extends ArrayAdapter {
@@ -73,14 +74,18 @@ public class IgListAdapter extends ArrayAdapter {
     // Main section
     final User user = users.get(position);
     nameTextField.setText(user.getName() + (user.getIs_private() ? getFormattedText(" \\uD83D\\uDD12") : ""));
-    infoTextField.setText(user.getInfo());
-    loadAsyncImage(imageView, user);
-    // Biography & bold and formatted text
-    TextView biographyTextView = (TextView) rowView.findViewById(R.id.biography_text_view);
-    String formattedText = getFormattedText(user.getBiography());
-    final SpannableStringBuilder sb = new SpannableStringBuilder("Biography: " + formattedText);
-    sb.setSpan(BOLD_STYLE, 0, "Biography:".length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-    biographyTextView.setText(sb);
+    if (user instanceof BlockedUser) {
+      infoTextField.setText("You are blocked");
+    } else {
+      infoTextField.setText(user.getInfo());
+      loadAsyncImage(imageView, user);
+      // Biography & bold and formatted text
+      TextView biographyTextView = (TextView) rowView.findViewById(R.id.biography_text_view);
+      String formattedText = getFormattedText(user.getBiography());
+      final SpannableStringBuilder sb = new SpannableStringBuilder("Biography: " + formattedText);
+      sb.setSpan(BOLD_STYLE, 0, "Biography:".length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+      biographyTextView.setText(sb);
+    }
     return rowView;
   }
 
@@ -99,7 +104,8 @@ public class IgListAdapter extends ArrayAdapter {
 
   private User leftJoinItem(User leftItem, List<User> right) {
     for (User i : right) {
-      if (i.getId().equals(leftItem.getId())) {
+      // It is important to join by name, because id can be 0L for blocked users
+      if (i.getName().equals(leftItem.getName())) {
         return i;
       }
     }

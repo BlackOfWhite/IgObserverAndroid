@@ -207,7 +207,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
   public void onDestroy() {
     super.onDestroy();
     Log.i(LOG_TAG, "onDestroy: ");
-//    unregisterReceiver(broadcastReceiver);
+    unregisterReceiver(broadcastReceiver);
   }
 
   // Setup a recurring alarm every half hour
