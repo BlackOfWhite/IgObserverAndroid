@@ -17,6 +17,7 @@
       android:value="@string/admob_app_id"/>
     <activity
       android:name=".activities.MainActivity"
+      android:screenOrientation="portrait"
       android:launchMode="singleTask">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
@@ -36,6 +37,7 @@
     <activity
       android:label="@string/title_activity_settings"
       android:name=".activities.SettingsActivity"
+      android:screenOrientation="portrait"
       android:parentActivityName=".activities.MainActivity">
       <meta-data
         android:name="android.support.PARENT_ACTIVITY"
@@ -43,7 +45,8 @@
     </activity>
     <activity
       android:label="@string/title_activity_settings"
-      android:name=".activities.UserSettingsActivity"
+      android:name=".activities.NotificationSettingsActivity"
+      android:screenOrientation="portrait"
       android:parentActivityName=".activities.MainActivity">
       <meta-data
         android:name="android.support.PARENT_ACTIVITY"
@@ -52,6 +55,16 @@
     <activity
       android:label="@string/title_activity_history"
       android:name=".activities.HistoryActivity"
+      android:screenOrientation="portrait"
+      android:parentActivityName=".activities.MainActivity">
+      <meta-data
+        android:name="android.support.PARENT_ACTIVITY"
+        android:value="org.ig.observer.pniewinski.activities.MainActivity"/>
+    </activity>
+    <activity
+      android:label="@string/title_activity_intro"
+      android:name=".activities.AppIntroActivity"
+      android:screenOrientation="portrait"
       android:parentActivityName=".activities.MainActivity">
       <meta-data
         android:name="android.support.PARENT_ACTIVITY"

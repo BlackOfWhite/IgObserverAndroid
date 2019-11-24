@@ -3,8 +3,8 @@ package org.ig.observer.pniewinski.activities;
 import static org.ig.observer.pniewinski.SnackbarUtils.networkNotFoundSnackbar;
 import static org.ig.observer.pniewinski.SnackbarUtils.sessionEndSnackbar;
 import static org.ig.observer.pniewinski.SnackbarUtils.snackbar;
-import static org.ig.observer.pniewinski.activities.UserSettingsActivity.SELECTED_USER_NAME;
-import static org.ig.observer.pniewinski.activities.UserSettingsActivity.SELECTED_USER_POSITION;
+import static org.ig.observer.pniewinski.activities.NotificationSettingsActivity.SELECTED_USER_NAME;
+import static org.ig.observer.pniewinski.activities.NotificationSettingsActivity.SELECTED_USER_POSITION;
 import static org.ig.observer.pniewinski.io.FileManager.loadCookieFromFile;
 import static org.ig.observer.pniewinski.io.FileManager.loadUsersFromFile;
 import static org.ig.observer.pniewinski.io.FileManager.saveCookieToFile;
@@ -60,6 +60,8 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
   public static final String IG_BROADCAST_LIST_UPDATE = "ig_broadcast_list_update";
   public static final String IG_BROADCAST_SESSION_END = "ig_broadcast_session_end";
   public static final int MAX_OBSERVED = 10;
+  public static final String IS_FIRST_RUN_PREFERENCE = "IS_FIRST_RUN_PREFERENCE";
+  public static final String PREFERENCES = "PREFERENCES";
   private ExecutorService networkExecutor = Executors.newSingleThreadExecutor();
   private ListView listView;
   private IgListAdapter adapter;
@@ -120,6 +122,10 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     Log.i(LOG_TAG, "onCreate: ");
     setContentView(R.layout.activity_main);
     this.context = this;
+
+    // First run
+    handleFirstRun();
+
     // Adapter
     CopyOnWriteArrayList<User> users = new CopyOnWriteArrayList<>(loadUsersFromFile(context));
     this.networkProcessor = new NetworkProcessor();
@@ -145,7 +151,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
       @Override
       public boolean onItemLongClick(AdapterView<?> adapterView, View view, int pos, long id) {
         Log.i(LOG_TAG, "onItemClickLong: " + pos);
-        Intent myIntent = new Intent(MainActivity.this, UserSettingsActivity.class);
+        Intent myIntent = new Intent(MainActivity.this, NotificationSettingsActivity.class);
         myIntent.putExtra(SELECTED_USER_POSITION, pos);
         User selectedUser = users.get(pos);
         myIntent.putExtra(SELECTED_USER_NAME, selectedUser.getName());
@@ -186,6 +192,15 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     loadAdMob();
   }
 
+  private void handleFirstRun() {
+    Boolean isFirstRun = getSharedPreferences(PREFERENCES, MODE_PRIVATE)
+        .getBoolean(IS_FIRST_RUN_PREFERENCE, true);
+    if (isFirstRun) {
+      startActivity(new Intent(MainActivity.this, AppIntroActivity.class));
+      this.finish();
+    }
+  }
+
   private void loadAdMob() {
     MobileAds.initialize(this, initializationStatus -> {
     });
@@ -198,7 +213,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     });
     AdRequest adRequest = new AdRequest.Builder()
         // use only in debug mode
-        .addTestDevice("807A759E2D6315A146E248E9FADB2A73")
+//        .addTestDevice("807A759E2D6315A146E248E9FADB2A73")
         .build();
     mAdView.loadAd(adRequest);
   }
@@ -234,8 +249,8 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     EditText taskEditText = new EditText(this);
     taskEditText.setSingleLine(true);
     AlertDialog dialog = new Builder(this, R.style.AlertDialogStyle)
-        .setTitle("Observe new user")
-        .setMessage("Enter name of the user to follow")
+        .setTitle("Observe new account")
+        .setMessage("Enter Instagram account name")
         .setView(taskEditText)
         .setPositiveButton("Observe", new OnClickListener() {
           @Override

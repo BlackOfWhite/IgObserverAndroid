@@ -49,6 +49,10 @@ android {
     }
 }
 
+repositories {
+    maven { url 'https://www.jitpack.io' }
+}
+
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     androidTestImplementation 'androidx.test:runner:1.1.0'
@@ -61,4 +65,5 @@ dependencies {
     implementation 'com.google.android.gms:play-services-ads:18.3.0'
     implementation group: 'org.codehaus.jackson', name: 'jackson-mapper-asl', version: '1.9.0'
     implementation group: 'org.apache.commons', name: 'commons-text', version: '1.8'
+    implementation group: 'com.github.apl-devs', name: 'AppIntro', version: 'v4.2.3'
 }

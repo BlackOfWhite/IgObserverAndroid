@@ -6,10 +6,8 @@ import static org.ig.observer.pniewinski.activities.MainActivity.MAX_OBSERVED;
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Looper;
-import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
-import android.text.Spanned;
 import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -34,8 +32,7 @@ import org.ig.observer.pniewinski.model.User;
 
 public class IgListAdapter extends ArrayAdapter {
 
-  private static final Spanned DIALOG_MESSAGE = (Html.fromHtml("&#8226; Click list item to see observed account's details.<br/><br/>"
-      + "&#8226; Click and hold item to enter notification settings."));
+  private static final String DIALOG_MESSAGE = "Click list item to see details. Click and hold to view notification settings.";
   private static final StyleSpan BOLD_STYLE = new StyleSpan(android.graphics.Typeface.BOLD);
   private final MainActivity mainActivity;
   private CopyOnWriteArrayList<User> users;
@@ -132,9 +129,8 @@ public class IgListAdapter extends ArrayAdapter {
 
   private void showInformationalDialog() {
     Log.i(LOG_TAG, "showInformationalDialog: show");
-    AlertDialog alertDialog = new Builder(mainActivity, R.style.AlertDialogStyle).setTitle("Tip")
-        .setMessage(DIALOG_MESSAGE).setIcon(R.drawable.ic_user_not_found)
-        .setPositiveButton("OK", null).create();
+    AlertDialog alertDialog = new Builder(mainActivity, R.style.AlertDialogStyle).setTitle("Hint")
+        .setMessage(DIALOG_MESSAGE).setPositiveButton("Got it", null).create();
     alertDialog.show();
   }
 

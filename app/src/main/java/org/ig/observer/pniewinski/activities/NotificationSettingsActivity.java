@@ -17,7 +17,7 @@ import androidx.appcompat.app.ActionBar;
 import androidx.core.app.NavUtils;
 import org.ig.observer.pniewinski.R;
 
-public class UserSettingsActivity extends AppCompatPreferenceActivity {
+public class NotificationSettingsActivity extends AppCompatPreferenceActivity {
 
   public static final String KEY_NOTIFICATION_BIOGRAPHY = "key_notification_biography";
   public static final String KEY_NOTIFICATION_POSTS = "key_notification_posts";
