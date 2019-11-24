@@ -78,7 +78,7 @@ public class NetworkProcessor {
   public User getUser(String userName, String cookie) throws UserNotFoundException, NetworkNotFound, ConnectionError {
     try {
       final String json = sendGET("https://www.instagram.com/" + userName + "/?__a=1", cookie);
-      // User found but blocked
+      // User found, but blocked
       if (json.equals("{}")) {
         Log.i(LOG_TAG, "getUserFromJson: user found, but is blocked");
         return new BlockedUser(userName);
@@ -110,8 +110,8 @@ public class NetworkProcessor {
       Boolean is_private = jsonNode.get("is_private").getBooleanValue();
       String img_url = jsonNode.get("profile_pic_url").getTextValue();
       if (id != null) {
-        Boolean has_stories = hasPublicStories(id, cookie);
-        return new User(id, userName, img_url, post_count, follows, followed_by, biography, is_private, has_stories);
+        Integer stories = getPublicStories(id, cookie);
+        return new User(id, userName, img_url, post_count, follows, followed_by, biography, is_private, stories);
       } else {
         Log.w(LOG_TAG, "getUser: " + userName + ", no patterns found in response");
         throw new UserNotFoundException(userName);
@@ -236,21 +236,20 @@ public class NetworkProcessor {
     return stringBuilder.toString();
   }
 
-  private boolean hasPublicStories(Long userId, String cookie) {
-    String url = "https://www.instagram.com/graphql/query/?query_hash=aec5501414615eca36a9acf075655b1e"
-        + "&variables={\"user_id\":\"" + userId + "\","
-        + "\"include_reel\":true,"
-        + "\"include_logged_out_extras\":true}";
+  private Integer getPublicStories(Long userId, String cookie) {
+    String url = "https://www.instagram.com/graphql/query/?query_hash=1ae3f0bfeb29b11f7e5e842f9e9e1c85"
+        + "&variables={\"reel_ids\":[\"" + userId + "\"],"
+        + "\"tag_names\":[],\"location_ids\":[],\"highlight_reel_ids\":[],\"precomposed_overlay\":false,"
+        + "\"show_story_viewer_list\":false,\"story_viewer_fetch_count\":50,\"story_viewer_cursor\":\"\",\"stories_video_dash_manifest\":false}\n";
     try {
       String json = sendGET(url, cookie);
-      if (json.contains("has_public_story\":true")) {
-        return true;
-      }
+      Log.i(LOG_TAG, "getPublicStories: " + json);
+      Integer stories = OBJECT_MAPPER.readTree(json).get("data").get("reels_media").get(0).get("items").size();
+      return stories;
     } catch (Exception e) {
       Log.w(LOG_TAG, "Unexpected exception while getting content of: " + url);
-      return false;
     }
-    return false;
+    return 0;
   }
 
   /**

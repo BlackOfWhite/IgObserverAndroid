@@ -15,14 +15,14 @@ public class User implements Serializable {
   private Long follows;
   private String biography;
   private boolean is_private;
-  private boolean has_stories;
+  private Integer stories;
 
   public User(Long id, String name, String img_url) {
-    this(id, name, img_url, 0L, 0L, 0L, "", false, false);
+    this(id, name, img_url, 0L, 0L, 0L, "", false, 0);
   }
 
   public User(Long id, String name, String img_url, Long posts, Long follows, Long followed_by, String biography, boolean is_private,
-      boolean has_stories) {
+      Integer stories) {
     this.id = id;
     this.img_url = img_url;
     this.name = name;
@@ -31,7 +31,7 @@ public class User implements Serializable {
     this.followed_by = followed_by;
     this.biography = biography;
     this.is_private = is_private;
-    this.has_stories = has_stories;
+    this.stories = stories;
   }
 
   public static String prettyCount(Number number) {
@@ -102,24 +102,24 @@ public class User implements Serializable {
     this.biography = biography;
   }
 
-  public Boolean getIs_private() {
+  public boolean isIs_private() {
     return is_private;
   }
 
-  public void setIs_private(Boolean is_private) {
+  public void setIs_private(boolean is_private) {
     this.is_private = is_private;
   }
 
-  public Boolean isHas_stories() {
-    return has_stories;
+  public Integer getStories() {
+    return stories;
   }
 
-  public void setHas_stories(boolean has_stories) {
-    this.has_stories = has_stories;
+  public void setStories(Integer stories) {
+    this.stories = stories;
   }
 
   public String getInfo() {
-    return "Posts: " + getPosts() + "   " + (has_stories ? "User has some stories" : "No stories") +
+    return "Posts: " + getPosts() + "   " + (stories > 0 ? "There are " + stories + " stories" : "No stories") +
         "\nFollows: " + prettyCount(getFollows()) + "   Followed by: " + prettyCount(getFollowed_by());
   }
 
@@ -134,7 +134,7 @@ public class User implements Serializable {
         ", follows=" + follows +
         ", biography='" + biography + '\'' +
         ", is_private=" + is_private +
-        ", has_stories=" + has_stories +
+        ", stories=" + stories +
         '}';
   }
 
@@ -151,6 +151,7 @@ public class User implements Serializable {
     User user = (User) o;
 
     return new EqualsBuilder()
+        .append(isIs_private(), user.isIs_private())
         .append(getId(), user.getId())
         .append(getName(), user.getName())
         .append(getImg_url(), user.getImg_url())
@@ -158,8 +159,7 @@ public class User implements Serializable {
         .append(getFollowed_by(), user.getFollowed_by())
         .append(getFollows(), user.getFollows())
         .append(getBiography(), user.getBiography())
-        .append(getIs_private(), user.getIs_private())
-        .append(isHas_stories(), user.isHas_stories())
+        .append(getStories(), user.getStories())
         .isEquals();
   }
 
@@ -173,8 +173,8 @@ public class User implements Serializable {
         .append(getFollowed_by())
         .append(getFollows())
         .append(getBiography())
-        .append(getIs_private())
-        .append(isHas_stories())
+        .append(isIs_private())
+        .append(getStories())
         .toHashCode();
   }
 }

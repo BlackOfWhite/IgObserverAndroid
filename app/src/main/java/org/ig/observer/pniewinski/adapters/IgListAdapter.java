@@ -73,7 +73,7 @@ public class IgListAdapter extends ArrayAdapter {
 
     // Main section
     final User user = users.get(position);
-    nameTextField.setText(user.getName() + (user.getIs_private() ? getFormattedText(" \\uD83D\\uDD12") : ""));
+    nameTextField.setText(user.getName() + (user.isIs_private() ? getFormattedText(" \\uD83D\\uDD12") : ""));
     if (user instanceof BlockedUser) {
       infoTextField.setText("You are blocked");
     } else {

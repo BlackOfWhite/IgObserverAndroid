@@ -283,15 +283,25 @@ public class IgService extends IntentService {
           new History(oldUser.getName(), timestamp,
               message + "\n" + numberFormat.format(old) + ARROW_RIGHT + numberFormat.format(newV)));
     }
-    if (oldUser.getIs_private() != newUser.getIs_private() && isNotificationEnabled(userName, KEY_NOTIFICATION_ACCOUNT_STATUS)) {
-      String message = "Account status has just changed to " + (newUser.getIs_private() ? "private" : "public") + "! ";
+    if (oldUser.isIs_private() != newUser.isIs_private() && isNotificationEnabled(userName, KEY_NOTIFICATION_ACCOUNT_STATUS)) {
+      String message = "Account status has just changed to " + (newUser.isIs_private() ? "private" : "public") + "! ";
       sb.append(message);
       historiesTmp.addFirst(new History(oldUser.getName(), timestamp, message));
     }
-    if (oldUser.isHas_stories() != newUser.isHas_stories() && isNotificationEnabled(userName, KEY_NOTIFICATION_HAS_STORIES)) {
-      String message = newUser.isHas_stories() ? "Account has at least one story. " : "Account doesn't have stories anymore. ";
-      sb.append(message);
-      historiesTmp.addFirst(new History(oldUser.getName(), timestamp, message));
+    if (oldUser.getStories() != newUser.getStories() && isNotificationEnabled(userName, KEY_NOTIFICATION_HAS_STORIES)) {
+      Integer old = oldUser.getStories();
+      Integer newV = newUser.getStories();
+      long diff = newV - old;
+      String message = "";
+      if (newV == 0L) {
+        message = "There are no stories. ";
+      } else if (diff > 0) {
+        message = (diff == 1 ? "There is a new story. " : ("There are " + diff + " new stories. "));
+      }
+      if (diff > 0) {
+        sb.append(message);
+        historiesTmp.addFirst(new History(oldUser.getName(), timestamp, message));
+      }
     }
     // Remove last space
     String message = sb.toString();
