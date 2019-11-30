@@ -48,6 +48,7 @@ import org.ig.observer.pniewinski.auth.AuthenticationDialog;
 import org.ig.observer.pniewinski.auth.AuthenticationListener;
 import org.ig.observer.pniewinski.exceptions.ConnectionError;
 import org.ig.observer.pniewinski.exceptions.NetworkNotFound;
+import org.ig.observer.pniewinski.exceptions.TooManyRequestsException;
 import org.ig.observer.pniewinski.exceptions.UserNotFoundException;
 import org.ig.observer.pniewinski.model.User;
 import org.ig.observer.pniewinski.network.NetworkProcessor;
@@ -257,7 +258,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
           public void onClick(DialogInterface dialog, int which) {
             final String userName = String.valueOf(taskEditText.getText());
             if (userName.trim().isEmpty()) {
-            } else if (isUserPresent(userName)) {
+            } else if (hasUserWithName(userName)) {
               snackbar(listView, "User " + userName + " is already observed.");
             } else {
               addNewUser(userName);
@@ -269,7 +270,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     dialog.show();
   }
 
-  private boolean isUserPresent(String userName) {
+  private boolean hasUserWithName(String userName) {
     for (User user : adapter.getUserList()) {
       if (user.getName().equalsIgnoreCase(userName)) {
         return true;
@@ -281,11 +282,15 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
   private void addNewUser(final String userName) {
     networkExecutor.submit(() -> {
       // Double check, because user could schedule multiple tasks very quickly
-      if (adapter.isListMaxSizeReached()) {
+      if (hasUserWithName(userName) || adapter.isListMaxSizeReached()) {
+        return;
+      }
+      final String cookie = loadCookieFromFile(context);
+      if (cookie == null) {
+        snackbar(listView, "Please log in");
         return;
       }
       try {
-        final String cookie = loadCookieFromFile(context);
         User user = networkProcessor.getUser(userName, cookie);
         addUserToList(user);
         snackbar(listView, "You are now observing user: " + userName);
@@ -296,6 +301,8 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
       } catch (ConnectionError connectionError) {
         sessionEndSnackbar(listView);
         signOut();
+      } catch (TooManyRequestsException e) {
+        snackbar(listView, "Too many requests - please wait a while");
       }
     });
   }
@@ -312,10 +319,14 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
 
   public void addUserToList(User user) {
     Log.i(LOG_TAG, "addUserToList: " + user);
-    CopyOnWriteArrayList<User> list = new CopyOnWriteArrayList<>(adapter.getUserList());
-    list.add(user);
-    adapter.refreshItems(list, list.size() == 1);
-    saveUsersToFile(list, context);
+    synchronized (this) {
+      if (!hasUserWithName(user.getName())) {
+        CopyOnWriteArrayList<User> list = new CopyOnWriteArrayList<>(adapter.getUserList());
+        list.add(user);
+        adapter.refreshItems(list, list.size() == 1);
+        saveUsersToFile(list, context);
+      }
+    }
   }
 
   /**

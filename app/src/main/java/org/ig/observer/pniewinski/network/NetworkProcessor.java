@@ -25,6 +25,7 @@ import org.codehaus.jackson.map.DeserializationConfig.Feature;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.ig.observer.pniewinski.exceptions.ConnectionError;
 import org.ig.observer.pniewinski.exceptions.NetworkNotFound;
+import org.ig.observer.pniewinski.exceptions.TooManyRequestsException;
 import org.ig.observer.pniewinski.exceptions.UserNotFoundException;
 import org.ig.observer.pniewinski.model.BlockedUser;
 import org.ig.observer.pniewinski.model.User;
@@ -75,7 +76,8 @@ public class NetworkProcessor {
     return positionOfMatchingParent;
   }
 
-  public User getUser(String userName, String cookie) throws UserNotFoundException, NetworkNotFound, ConnectionError {
+  public User getUser(String userName, String cookie)
+      throws UserNotFoundException, NetworkNotFound, ConnectionError, TooManyRequestsException {
     try {
       final String json = sendGET("https://www.instagram.com/" + userName + "/?__a=1", cookie);
       // User found, but blocked
@@ -91,6 +93,8 @@ public class NetworkProcessor {
         Log.w(LOG_TAG, "getUser: " + userName, e);
         throw new UserNotFoundException(userName);
       }
+      throw e;
+    } catch (TooManyRequestsException e) {
       throw e;
     } catch (Exception e) {
       Log.w(LOG_TAG, "Failed to fetch data for user: " + userName + ". Attempt to scrap html page.", e);
@@ -145,7 +149,7 @@ public class NetworkProcessor {
     }
   }
 
-  private String sendGET(String url, String cookie) throws IOException, ConnectionError {
+  private String sendGET(String url, String cookie) throws IOException, TooManyRequestsException, ConnectionError {
     Log.i(LOG_TAG, "Sending GET request for URL: " + url + "\nCookie: " + cookie);
     StringBuilder stringBuilder = new StringBuilder();
     HttpsURLConnection sslConnection;
@@ -165,7 +169,8 @@ public class NetworkProcessor {
     if (responseCode >= 400) {
       Log.i(LOG_TAG, "Got invalid response code: " + responseCode + ", response message: " + sslConnection.getResponseMessage());
       if (responseCode == 429) {
-        Log.i(LOG_TAG, sslConnection.getHeaderFields().toString());
+        Log.i(LOG_TAG, "code was 429: " + sslConnection.getHeaderFields().toString());
+        throw new TooManyRequestsException(responseCode);
       }
       throw new ConnectionError(responseCode);
     } else if (responseCode >= 300) {

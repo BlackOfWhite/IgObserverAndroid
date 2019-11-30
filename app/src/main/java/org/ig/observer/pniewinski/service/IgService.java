@@ -45,6 +45,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.ig.observer.pniewinski.R;
 import org.ig.observer.pniewinski.activities.MainActivity;
 import org.ig.observer.pniewinski.exceptions.ConnectionError;
+import org.ig.observer.pniewinski.exceptions.TooManyRequestsException;
 import org.ig.observer.pniewinski.exceptions.UserRemovedError;
 import org.ig.observer.pniewinski.model.BlockedUser;
 import org.ig.observer.pniewinski.model.History;
@@ -141,6 +142,10 @@ public class IgService extends IntentService {
       } catch (UserRemovedError e) {
         Log.w(LOG_TAG, "User probably removed his/her account!", e);
         userNotificationMessages.put(user, "User has probably removed his/her account!");
+      } catch (TooManyRequestsException e) {
+        Log.w(LOG_TAG, "processUsers: TooManyRequestsException - skip one service cycle");
+        newUserList = new CopyOnWriteArrayList<>(userList);
+        break;
       } catch (Exception e) {
         if (e instanceof ConnectionError) {
           if (((ConnectionError) e).getHttpCode() == 302) {
