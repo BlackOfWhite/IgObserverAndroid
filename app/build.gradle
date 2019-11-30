@@ -13,10 +13,10 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "org.ig.observer.pniewinski"
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 28
         versionCode 4
-        versionName "1.3"
+        versionName "1.4"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         signingConfig signingConfigs.config
         vectorDrawables.useSupportLibrary = true

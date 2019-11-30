@@ -11,9 +11,10 @@ import static org.ig.observer.pniewinski.io.FileManager.saveCookieToFile;
 import static org.ig.observer.pniewinski.io.FileManager.saveUsersToFile;
 import static org.ig.observer.pniewinski.network.NetworkProcessor.clearCookies;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
@@ -52,12 +53,12 @@ import org.ig.observer.pniewinski.exceptions.TooManyRequestsException;
 import org.ig.observer.pniewinski.exceptions.UserNotFoundException;
 import org.ig.observer.pniewinski.model.User;
 import org.ig.observer.pniewinski.network.NetworkProcessor;
-import org.ig.observer.pniewinski.service.AlarmReceiver;
+import org.ig.observer.pniewinski.service.IgService;
 
 public class MainActivity extends AppCompatActivity implements AuthenticationListener {
 
   public static final String LOG_TAG = "IG_TAG";
-  public static final Long SERVICE_INTERVAL = 10 * 60_000L; // 10min
+  public static final Long SERVICE_INTERVAL = 15 * 60_000L; // 15 min
   public static final String IG_BROADCAST_LIST_UPDATE = "ig_broadcast_list_update";
   public static final String IG_BROADCAST_SESSION_END = "ig_broadcast_session_end";
   public static final int MAX_OBSERVED = 6;
@@ -172,7 +173,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
       }
     });
 //     clearStorage();
-    scheduleAlarmService();
+    scheduleIgService();
     // IgService BroadcastReceiver
     this.broadcastReceiver = new BroadcastReceiver() {
       @Override
@@ -214,7 +215,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     });
     AdRequest adRequest = new AdRequest.Builder()
         // use only in debug mode
-//        .addTestDevice("807A759E2D6315A146E248E9FADB2A73")
+        .addTestDevice("807A759E2D6315A146E248E9FADB2A73")
         .build();
     mAdView.loadAd(adRequest);
   }
@@ -226,17 +227,14 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
     unregisterReceiver(broadcastReceiver);
   }
 
-  // Setup a recurring alarm every half hour
-  private void scheduleAlarmService() {
-    // Construct an intent that will execute the AlarmReceiver
-    Intent intent = new Intent(this, AlarmReceiver.class);
-    // Create a PendingIntent to be triggered when the alarm goes off
-    final PendingIntent pIntent = PendingIntent.getBroadcast(this, AlarmReceiver.REQUEST_CODE,
-        intent, PendingIntent.FLAG_UPDATE_CURRENT);
-    // Setup periodic alarm
-    AlarmManager alarm = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
-    alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 1000L,
-        SERVICE_INTERVAL, pIntent); // every 5 min
+  private void scheduleIgService() {
+    JobScheduler jobScheduler = (JobScheduler) getApplicationContext()
+        .getSystemService(JOB_SCHEDULER_SERVICE);
+    ComponentName componentName = new ComponentName(this,
+        IgService.class);
+    JobInfo jobInfoObj = new JobInfo.Builder(1, componentName).setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+        .setPeriodic(SERVICE_INTERVAL).build();
+    jobScheduler.schedule(jobInfoObj);
   }
 
   @Override

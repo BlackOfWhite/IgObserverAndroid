@@ -18,11 +18,13 @@ import static org.ig.observer.pniewinski.io.FileManager.loadTimestampFromFile;
 import static org.ig.observer.pniewinski.io.FileManager.loadUsersFromFile;
 import static org.ig.observer.pniewinski.io.FileManager.saveHistoryToFile;
 import static org.ig.observer.pniewinski.io.FileManager.saveTimestampToFile;
+import static org.ig.observer.pniewinski.io.FileManager.saveUsersToFile;
 
-import android.app.IntentService;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.job.JobParameters;
+import android.app.job.JobService;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -41,6 +43,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantLock;
 import org.ig.observer.pniewinski.R;
 import org.ig.observer.pniewinski.activities.MainActivity;
@@ -52,23 +56,32 @@ import org.ig.observer.pniewinski.model.History;
 import org.ig.observer.pniewinski.model.User;
 import org.ig.observer.pniewinski.network.NetworkProcessor;
 
-public class IgService extends IntentService {
+public class IgService extends JobService {
 
   private static final int QUEUE_SIZE = 100;
   private static final NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.US);
   private static ReentrantLock lock = new ReentrantLock();
   private final String ARROW_RIGHT = " \\u27a1\\ufe0f ";
+  private NetworkProcessor networkProcessor = new NetworkProcessor();
   private SharedPreferences preferences;
   private String preferencePattern = "%s" + PREFERENCE_SEPARATOR + "%s"; // username + PREFERENCE_SEPARATOR + key
   private LinkedList<History> historiesTmp = new LinkedList<>();
+  private Executor executor = Executors.newSingleThreadExecutor();
 
-  public IgService() {
-    super("IgService");
-    Log.i(LOG_TAG, "IgService constructor");
+
+  @Override
+  public boolean onStartJob(JobParameters params) {
+    Log.i(LOG_TAG, "onStartJob");
+    handleJobStart();
+    return false;
   }
 
   @Override
-  protected void onHandleIntent(Intent intent) {
+  public boolean onStopJob(JobParameters params) {
+    return false;
+  }
+
+  protected void handleJobStart() {
     Log.i(LOG_TAG, "onHandleIntent: Starting IgService service run");
     if (lock.tryLock()) {
       try {
@@ -93,11 +106,10 @@ public class IgService extends IntentService {
         // Logic
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
         Log.i(LOG_TAG, "getCookie: " + cookie);
-        Log.i(LOG_TAG, "allPreferences: " + preferences.getAll());
         CopyOnWriteArrayList<User> users = loadUsersFromFile(getApplicationContext());
         Log.i(LOG_TAG, "onHandleIntent::userList: " + users);
         if (users != null && !users.isEmpty()) {
-          processUsers(users, cookie);
+          executor.execute(() -> processUsers(users, cookie));
         }
       } finally {
         lock.unlock();
@@ -115,7 +127,6 @@ public class IgService extends IntentService {
   }
 
   private void processUsers(List<User> userList, final String cookie) {
-    NetworkProcessor networkProcessor = new NetworkProcessor();
     CopyOnWriteArrayList<User> newUserList = new CopyOnWriteArrayList<>();
     Map<User, String> userNotificationMessages = new HashMap<>();
     historiesTmp.clear();
@@ -123,11 +134,9 @@ public class IgService extends IntentService {
     for (User user : userList) {
       try {
         User newUser = networkProcessor.getUser(user.getName(), cookie);
-        // force notification, test purposes
-//        newUser.setBiography(user.getBiography() + " test");
         if (!user.equals(newUser)) {
-          Log.i(LOG_TAG, "User " + newUser.getName() + " has changed. Comparing with its old version.");
-          Log.i(LOG_TAG, "old: " + user + "\nnew: " + newUser);
+          Log.d(LOG_TAG, "User " + newUser.getName() + " has changed. Comparing with its old version.");
+          Log.d(LOG_TAG, "old: " + user + "\nnew: " + newUser);
           newUserList.add(newUser);
           // Check for notifications
           String userNotificationMsg = buildUserNotificationMessage(user, newUser);
@@ -163,7 +172,7 @@ public class IgService extends IntentService {
       }
       try {
         // Some delay to avoid being treated as DDOS
-        Thread.sleep(300L);
+        Thread.sleep(1000L);
       } catch (InterruptedException e) {
         Log.e(LOG_TAG, "Interrupted IgService!", e);
       }
@@ -182,6 +191,7 @@ public class IgService extends IntentService {
     }
 
     // Update list used in main activity, send broadcast
+    saveUsersToFile(newUserList, getApplicationContext());
     Intent intent = new Intent(IG_BROADCAST_LIST_UPDATE);
     intent.putExtra("user_list", newUserList);
     sendBroadcast(intent);
