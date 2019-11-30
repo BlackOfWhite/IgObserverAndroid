@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity implements AuthenticationLis
   public static final Long SERVICE_INTERVAL = 10 * 60_000L; // 10min
   public static final String IG_BROADCAST_LIST_UPDATE = "ig_broadcast_list_update";
   public static final String IG_BROADCAST_SESSION_END = "ig_broadcast_session_end";
-  public static final int MAX_OBSERVED = 10;
+  public static final int MAX_OBSERVED = 6;
   public static final String IS_FIRST_RUN_PREFERENCE = "IS_FIRST_RUN_PREFERENCE";
   public static final String PREFERENCES = "PREFERENCES";
   private ExecutorService networkExecutor = Executors.newSingleThreadExecutor();
