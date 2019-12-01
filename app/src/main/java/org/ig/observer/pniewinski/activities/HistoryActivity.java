@@ -17,7 +17,6 @@ public class HistoryActivity extends AppCompatActivity {
   private HistoryListAdapter adapter;
   private Context context;
 
-
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -26,7 +25,7 @@ public class HistoryActivity extends AppCompatActivity {
     // Adapter
     LinkedList<History> historyList = new LinkedList<>(loadHistoryFromFile(context));
     adapter = new HistoryListAdapter(this, historyList);
-    listView = (ListView) findViewById(R.id.list_view);
+    listView = findViewById(R.id.list_view);
     listView.setAdapter(adapter);
   }
 

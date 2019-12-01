@@ -10,7 +10,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -73,7 +72,6 @@ public class FileManager {
           ObjectInputStream is = new ObjectInputStream(fis)) {
         LinkedList<History> histories = (LinkedList<History>) is.readObject();
 //        Log.i(LOG_TAG, "loadedHistoryFromFile: " + histories);
-        Collections.sort(histories);
         return histories;
       } catch (FileNotFoundException e) {
         Log.w(LOG_TAG, "Failed to find file: ", e);

@@ -252,7 +252,7 @@ public class NetworkProcessor {
       Integer stories = OBJECT_MAPPER.readTree(json).get("data").get("reels_media").get(0).get("items").size();
       return stories;
     } catch (Exception e) {
-      Log.w(LOG_TAG, "Unexpected exception while getting content of: " + url);
+      Log.w(LOG_TAG, "Unexpected exception while getting content of: " + url, e);
     }
     return 0;
   }

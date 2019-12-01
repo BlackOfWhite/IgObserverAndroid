@@ -4,6 +4,8 @@ import androidx.annotation.NonNull;
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 public class History implements Serializable, Comparable<History> {
 
@@ -64,5 +66,33 @@ public class History implements Serializable, Comparable<History> {
   @Override
   public int compareTo(@NonNull History o) {
     return -1 * this.getTimestamp().compareTo(o.getTimestamp());
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    History history = (History) o;
+
+    return new EqualsBuilder()
+        .append(getUserName(), history.getUserName())
+        .append(getTimestamp(), history.getTimestamp())
+        .append(getMessage(), history.getMessage())
+        .isEquals();
+  }
+
+  @Override
+  public int hashCode() {
+    return new HashCodeBuilder(17, 37)
+        .append(getUserName())
+        .append(getTimestamp())
+        .append(getMessage())
+        .toHashCode();
   }
 }

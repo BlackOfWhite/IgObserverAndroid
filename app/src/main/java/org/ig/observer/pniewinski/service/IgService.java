@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -65,9 +66,8 @@ public class IgService extends JobService {
   private NetworkProcessor networkProcessor = new NetworkProcessor();
   private SharedPreferences preferences;
   private String preferencePattern = "%s" + PREFERENCE_SEPARATOR + "%s"; // username + PREFERENCE_SEPARATOR + key
-  private LinkedList<History> historiesTmp = new LinkedList<>();
+  private TreeSet<History> newHistories = new TreeSet<>();
   private Executor executor = Executors.newSingleThreadExecutor();
-
 
   @Override
   public boolean onStartJob(JobParameters params) {
@@ -126,10 +126,10 @@ public class IgService extends JobService {
     sendBroadcast(intent);
   }
 
-  private void processUsers(List<User> userList, final String cookie) {
+  private void processUsers(final List<User> userList, final String cookie) {
     CopyOnWriteArrayList<User> newUserList = new CopyOnWriteArrayList<>();
     Map<User, String> userNotificationMessages = new HashMap<>();
-    historiesTmp.clear();
+    newHistories.clear();
     // Get notification settings
     for (User user : userList) {
       try {
@@ -197,15 +197,13 @@ public class IgService extends JobService {
     sendBroadcast(intent);
 
     // Update history list
-    if (historiesTmp.size() > 0) {
-      LinkedList<History> histories = loadHistoryFromFile(this);
-      for (History history : historiesTmp) {
-        histories.addFirst(history);
+    if (!newHistories.isEmpty()) {
+      newHistories.addAll(loadHistoryFromFile(this));
+      LinkedList<History> historyLinkedList = new LinkedList<>(newHistories);
+      if (newHistories.size() > QUEUE_SIZE) {
+        historyLinkedList = new LinkedList<>(historyLinkedList.subList(0, QUEUE_SIZE));
       }
-      if (histories.size() > QUEUE_SIZE) {
-        histories = new LinkedList<>(histories.subList(0, QUEUE_SIZE));
-      }
-      saveHistoryToFile(histories, getApplicationContext());
+      saveHistoryToFile(historyLinkedList, getApplicationContext());
     }
 
     // Send notifications
@@ -248,11 +246,11 @@ public class IgService extends JobService {
     // Handle blocked users
     if (oldUser instanceof BlockedUser) {
       String message = "You have been un-blocked. ";
-      historiesTmp.addFirst(new History(oldUser.getName(), timestamp, message));
+      newHistories.add(new History(oldUser.getName(), timestamp, message));
       return message;
     } else if (newUser instanceof BlockedUser) {
       String message = "You have been blocked. ";
-      historiesTmp.addFirst(new History(oldUser.getName(), timestamp, message));
+      newHistories.add(new History(oldUser.getName(), timestamp, message));
       return message;
     }
 
@@ -260,13 +258,13 @@ public class IgService extends JobService {
     if (!oldUser.getBiography().equals(newUser.getBiography()) && isNotificationEnabled(userName, KEY_NOTIFICATION_BIOGRAPHY)) {
       String message = "The biography has changed. ";
       sb.append(message);
-      historiesTmp.addFirst(new History(oldUser.getName(), timestamp,
+      newHistories.add(new History(oldUser.getName(), timestamp,
           message + "\n" + oldUser.getBiography() + "\n" + ARROW_RIGHT + "\n" + newUser.getBiography()));
     }
     if (!oldUser.getImg_url().equals(newUser.getImg_url()) && isNotificationEnabled(userName, KEY_NOTIFICATION_PICTURE)) {
       String message = "There is a new profile picture. ";
       sb.append(message);
-      historiesTmp.addFirst(new History(oldUser.getName(), timestamp, message));
+      newHistories.add(new History(oldUser.getName(), timestamp, message));
     }
     if ((long) oldUser.getFollows() != newUser.getFollows() && isNotificationEnabled(userName, KEY_NOTIFICATION_FOLLOWS)) {
       Long old = oldUser.getFollows();
@@ -274,7 +272,7 @@ public class IgService extends JobService {
       long diff = newV - old;
       String message = "User is now following " + Math.abs(diff) + " accounts " + (diff > 0 ? "more." : "less.") + " ";
       sb.append(message);
-      historiesTmp.addFirst(
+      newHistories.add(
           new History(oldUser.getName(), timestamp,
               message + "\n" + numberFormat.format(old) + ARROW_RIGHT + numberFormat.format(newV)));
     }
@@ -284,7 +282,7 @@ public class IgService extends JobService {
       long diff = newV - old;
       String message = "User has just " + (diff > 0 ? "gained " : "lost ") + Math.abs(diff) + " followers. ";
       sb.append(message);
-      historiesTmp.addFirst(
+      newHistories.add(
           new History(oldUser.getName(), timestamp,
               message + "\n" + numberFormat.format(old) + ARROW_RIGHT + numberFormat.format(newV)));
     }
@@ -294,14 +292,14 @@ public class IgService extends JobService {
       long diff = newV - old;
       String message = "User has just " + (diff > 0 ? "added " : "removed ") + Math.abs(diff) + " post(s). ";
       sb.append(message);
-      historiesTmp.addFirst(
+      newHistories.add(
           new History(oldUser.getName(), timestamp,
               message + "\n" + numberFormat.format(old) + ARROW_RIGHT + numberFormat.format(newV)));
     }
     if (oldUser.isIs_private() != newUser.isIs_private() && isNotificationEnabled(userName, KEY_NOTIFICATION_ACCOUNT_STATUS)) {
       String message = "Account status has just changed to " + (newUser.isIs_private() ? "private" : "public") + "! ";
       sb.append(message);
-      historiesTmp.addFirst(new History(oldUser.getName(), timestamp, message));
+      newHistories.add(new History(oldUser.getName(), timestamp, message));
     }
     if (oldUser.getStories() != newUser.getStories() && isNotificationEnabled(userName, KEY_NOTIFICATION_HAS_STORIES)) {
       Integer old = oldUser.getStories();
@@ -315,7 +313,7 @@ public class IgService extends JobService {
       }
       if (diff > 0) {
         sb.append(message);
-        historiesTmp.addFirst(new History(oldUser.getName(), timestamp, message));
+        newHistories.add(new History(oldUser.getName(), timestamp, message));
       }
     }
     // Remove last space
